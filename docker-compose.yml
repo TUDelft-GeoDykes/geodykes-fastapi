@@ -1,6 +1,7 @@
 version: "3.9"
 
 services:
+  # Service for the application
   application:
     build:
       context: .
@@ -9,25 +10,42 @@ services:
         - ENVIRONMENT=dev
     restart: always
     volumes:
+      # Mount the application code into the container
+      # This allows changes in the code to be reflected in the container without needing a rebuild
       - .:/code
     ports:
-      - "8000:8000"
+      # Expose port 8000 of the container to port 8000 on the host
+      # This allows you to access the application at localhost:8000
+      - 8000:8000
     depends_on:
+      # Wait for the database to become available before starting the application
       db:
         condition: service_healthy
     environment:
+      # Environment variables for debugging and database echo
       - DEBUG=true
       - DB_ECHO=true
-    command:
-      ["python", "-m", "app"]
+    command: >
+      sh -c "alembic upgrade head &&
+             python -m app"
 
+  # Service for the database
   db:
     image: postgres:14
     restart: always
     environment:
+      # Setting the default user's password for PostgreSQL
       - POSTGRES_PASSWORD=password
+    volumes:
+      # Persist database data between container restarts
+      # This volume stores the database data on the host machine to ensure data is not lost when the container is restarted
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      test: [CMD-SHELL, pg_isready -U postgres -d postgres]
       interval: 1s
       timeout: 5s
       retries: 15
+
+# Named volumes for the database
+volumes:
+  pgdata:
