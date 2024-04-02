@@ -50,3 +50,7 @@ Task is a task runner / build tool that aims to be simpler and easier to use tha
 
 - `task -l` - list of tasks with descriptions
 - `task -a` - list of all tasks
+
+## Steps to see the app
+1. Deploy locally with `docker-compose up`
+5. To see the webapp go to this url: `localhost:8000/docs`
