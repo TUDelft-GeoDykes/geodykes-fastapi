@@ -18,3 +18,5 @@ pytest.xml
 .hypothesis
 .python-version
 .venv
+**-app.code**
+venv
