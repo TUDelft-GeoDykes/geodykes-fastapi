@@ -8,6 +8,9 @@
 ### Description
 Production-ready dockerized async REST API on FastAPI with SQLAlchemy and PostgreSQL
 
+## Prerequisites
+Make sure to have `poetry`, `docker`, `go-task` and `docker-compose` installed in your system.
+
 ## Key Features
 - tests on `pytest` with automatic rollback after each test case
 - db session stored in Python's `context variable`
@@ -51,6 +54,7 @@ Task is a task runner / build tool that aims to be simpler and easier to use tha
 - `task -l` - list of tasks with descriptions
 - `task -a` - list of all tasks
 
-## Steps to see the app
+## Steps to deploy the app
+
 1. Deploy locally with `docker-compose up`
 5. To see the webapp go to this url: `localhost:8000/docs`
