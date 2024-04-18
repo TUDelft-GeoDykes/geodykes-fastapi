@@ -58,3 +58,23 @@ Task is a task runner / build tool that aims to be simpler and easier to use tha
 
 1. Deploy locally with `docker-compose up`
 5. To see the webapp go to this url: `localhost:8000/docs`
+
+
+## Local development setup
+After installing everything and all the above works, you can also setup a local setup, to run the application locally and connect to the database container.
+
+This is what worked for me on MaCOS 
+
+### Activate your environment
+```
+poetry shell
+```
+### Run the app script to make sure 
+```bash
+source $(poetry env info --path)/bin/activate
+python3 app/application.py # Make sure that you can run the app
+
+export PYTHONPATH="$(poetry env info --path)/lib/python3.12/site-packages":$PYTHONPATH
+poetry run uvicorn app.application:application --reload
+```
+
