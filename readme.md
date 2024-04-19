@@ -63,18 +63,21 @@ Task is a task runner / build tool that aims to be simpler and easier to use tha
 ## Local development setup
 After installing everything and all the above works, you can also setup a local setup, to run the application locally and connect to the database container.
 
-This is what worked for me on MaCOS 
-
 ### Activate your environment
 ```
 poetry shell
 ```
 ### Run the app script to make sure 
+These are things I needed to do in MacOS. You might not to do all these steps in linux.
 ```bash
 source $(poetry env info --path)/bin/activate
 python3 app/application.py # Make sure that you can run the app
 
 export PYTHONPATH="$(poetry env info --path)/lib/python3.12/site-packages":$PYTHONPATH
 poetry run uvicorn app.application:application --reload
+
+# Make sure to load environment variables
+source .env # This will export the environment variables declaed in the .env file
+echo ${DB_HOST} # should print localhost
 ```
 

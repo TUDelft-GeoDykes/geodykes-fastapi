@@ -10,7 +10,7 @@ class Settings(pydantic_settings.BaseSettings):
     log_level: LogLevels = LogLevels.info
 
     db_driver: str = "postgresql+asyncpg"
-    db_host: str = os.getenv("DB_HOST", "localhost")
+    db_host: str = os.getenv("DB_HOST", "db")
     db_port: int = 5432
     db_user: str = "postgres"
     db_password: str = "password"
