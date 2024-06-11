@@ -13,6 +13,8 @@ from app.db.exceptions import DatabaseValidationError
 from app.db.utils import operators_map
 from app.utils.datetime import generate_utc_dt
 
+from app.db.base import Base
+
 
 if typing.TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,11 +23,8 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-METADATA: typing.Final = sa.MetaData()
 
 
-class Base(orm.DeclarativeBase):
-    metadata = METADATA
 
 
 class EmptyBaseModel(Base):
