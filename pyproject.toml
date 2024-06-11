@@ -8,7 +8,6 @@ license = "MIT License"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-fastapi = ">=0.76"
 pydantic-settings = "*"
 granian = "*"
 # database
@@ -16,6 +15,10 @@ alembic = "*"
 psycopg2 = "*"
 sqlalchemy = "*"
 asyncpg = "*"
+greenlet = "^3.0.3"
+python-dotenv = "^1.0.1"
+geodykes_model = {path = "./geodykes-pydantic-models", develop = true}
+fastapi = "^0.111.0"
 
 [tool.poetry.group.dev.dependencies]
 httpx = "*"
@@ -60,11 +63,6 @@ python_version = "3.11"
 strict = true
 pretty = true
 
-[[pydantic-mypy]]
-warn_required_dynamic_aliases = true
-warn_untyped_fields = true
-init_typed = true
-
 [tool.pytest.ini_options]
 addopts = "--cov=. --cov-report term-missing"
 asyncio_mode = "auto"
@@ -73,3 +71,8 @@ asyncio_mode = "auto"
 exclude_also = [
     "if typing.TYPE_CHECKING:",
 ]
+[[pydantic-mypy]]
+warn_required_dynamic_aliases = true
+warn_untyped_fields = true
+init_typed = true
+
