@@ -3,6 +3,9 @@ import pydantic_settings
 from granian.log import LogLevels
 from sqlalchemy.engine.url import URL
 
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Settings(pydantic_settings.BaseSettings):
     service_name: str = "FastAPI template"
