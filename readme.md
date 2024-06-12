@@ -23,6 +23,13 @@ Make sure to have `poetry`, `docker`, `go-task` and `docker-compose` installed i
 task -l  # list of tasks with descriptions
 ```
 
+### Install python 3.11 or higher
+Make sure you have python 3.11 or higher installed in your system. You can check the version of python by running the following command:
+```sh
+python3 --version
+```
+
+
 ### Prepare virtual environment
 ```bash
 python3 -m venv venv
@@ -63,8 +70,10 @@ Task is a task runner / build tool that aims to be simpler and easier to use tha
 ## Local development setup
 After installing everything and all the above works, you can also setup a local setup, to run the application locally and connect to the database container.
 
+
 ### Activate your environment
-```
+```sh
+# Activate the environment using poetry
 poetry shell
 ```
 ### Run the app script to make sure 
@@ -79,8 +88,12 @@ pytest
 ```
 
 ### Run the app
-```
+```sh
+# Export PYTHONPATH
 export PYTHONPATH="$(poetry env info --path)/lib/python3.12/site-packages":$PYTHONPATH
+
+# Export all environment variables with script export-env.sh
+source export-env.sh 
 poetry run uvicorn app.application:application --reload
 ```
 # Make sure to load environment variables
