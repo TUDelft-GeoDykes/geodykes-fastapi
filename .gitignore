@@ -20,3 +20,4 @@ pytest.xml
 .venv
 **-app.code**
 venv
+data
