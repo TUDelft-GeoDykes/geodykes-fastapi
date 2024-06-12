@@ -14,10 +14,10 @@ class Settings(pydantic_settings.BaseSettings):
 
     db_driver: str = "postgresql+asyncpg"
     db_host: str = os.getenv("DB_HOST", "db")
-    db_port: int = 5432
-    db_user: str = "postgres"
-    db_password: str = "password"
-    db_database: str = "postgres"
+    db_port: int = os.getenv("DB_PORT", 5432)
+    db_user: str = os.getenv("DB_USER", "postgres")
+    db_password: str = os.getenv("DB_PASS", "password")
+    db_database: str = os.getenv("DB_NAME", "postgres")
 
     db_pool_size: int = 5
     db_max_overflow: int = 0
