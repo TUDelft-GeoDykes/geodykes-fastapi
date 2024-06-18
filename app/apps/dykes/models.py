@@ -27,6 +27,8 @@ class Crossection(BaseModel):
     name = sa.Column(sa.String, nullable=False)  # Name or identifier of the crossection
     description = sa.Column(sa.String, nullable=True)  # Optional detailed description of the crossection
     topology = sa.Column(sa.String, nullable=False)  # Descriptive attribute for the shape or structure
+    # Relationship to Timeseries, indicating one crossection can have multiple timeseries.
+    timeseries = relationship("Timeseries", backref="crossection")
     crossection_layers = relationship("CrossectionLayer", backref="crossection")
 
 
