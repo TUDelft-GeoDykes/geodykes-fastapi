@@ -28,3 +28,12 @@ class Crossection(BaseModel):
     name = sa.Column(sa.String, nullable=False)  # Name or identifier of the crossection
     description = sa.Column(sa.String, nullable=True)  # Optional detailed description of the crossection
     topology = sa.Column(sa.String, nullable=False)  # Descriptive attribute for the shape or structure
+
+# Timeseries model represents timestampes of a certain unit
+class Timeseries(BaseModel):
+    __tablename__ = "timeseries"  # Database table name
+    timeseries_id = sa.Column(sa.Integer, primary_key=True)  # Primary key, analogous to 'id' in the database schema
+    crossection_id = sa.Column(sa.Integer, sa.ForeignKey("crossection.crossection_id"), nullable=False)  # Foreign key linking back to Crossection
+    location_in_topology = sa.Column(sa.Integer, nullable=True)  # Location within the crossection
+    unit = sa.Column(sa.String, nullable=True)  # Optional unit for the timeseries
+    sensor_code = sa.Column(sa.Integer, nullable=False)  # A sensor's code of location within a measurement vertical
