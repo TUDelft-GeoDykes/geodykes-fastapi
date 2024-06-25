@@ -1,5 +1,4 @@
 
-# test_topology.py
 def test_add_topology(session):
     from app.apps.dykes.models import Topology
     # Assuming that Topology has been imported from models.models

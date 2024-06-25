@@ -21,17 +21,17 @@ def dummy_engine():
 
 
 @pytest.fixture(scope="session")
-def inspector(dummy_engine):
+def inspector_dummy(dummy_engine):
     from sqlalchemy import inspect
     return inspect(dummy_engine)
 
 # test_database.py
-def test_dummy_table_exist(inspector):
+def test_dummy_table_exist(inspector_dummy):
     # List of expected tables
     expected_tables = {'dummy'}
 
     # Get the set of actual tables from the database
-    actual_tables = set(inspector.get_table_names())
+    actual_tables = set(inspector_dummy.get_table_names())
 
     # Assert that every expected table is in the set of actual tables
     assert expected_tables.issubset(actual_tables), f"Missing tables: {expected_tables - actual_tables}"
