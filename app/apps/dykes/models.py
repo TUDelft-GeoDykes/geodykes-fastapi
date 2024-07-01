@@ -31,10 +31,10 @@ class Crossection(BaseModel):
 
 
 class Topology(BaseModel):
-    """ Column to store coordinates in JSON format. This approach is chosen for several reasons:
+    """
+    Column to store coordinates in JSON format. This approach is chosen for several reasons:
     1. Data Integrity: Storing coordinates as a JSON array of objects (e.g., [{"x": 1, "y": 2}, {"x": 3, "y": 4}])
         ensures that each X and Y value is inherently paired, maintaining the structural integrity of coordinate data.
-    2. Ease of Use: JSON fields are directly supported by pandas, allowing for seamless loading and unloading of
         data between a SQL database and a pandas DataFrame. This is particularly beneficial for data science and analytics
         workflows where pandas is a common tool for data manipulation.
     3. Database Performance: Using a JSON field leverages the capabilities of modern relational databases like PostgreSQL,
@@ -50,7 +50,9 @@ class Topology(BaseModel):
     # manipulation of the JSON structure, or custom queries that leverage the JSON capabilities of the database.
 
 class CrossectionLayer(BaseModel):
-    """ A layer is a 2D geometry composed of a top topology and a bottom topology. This model represents the layers of a crossection."""
+    """
+    A layer is a 2D geometry composed of a top topology and a bottom topology. This model represents the layers of a crossection.
+    """
     __tablename__ = "crossection_layer"
     # Crossection id to which the layer belongs
     crossection_id = sa.Column(sa.Integer, sa.ForeignKey("crossection.id"), nullable=False)
