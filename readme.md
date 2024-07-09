@@ -87,6 +87,19 @@ python3 app/application.py # Make sure that you can run the app
 pytest
 ```
 
+### Run migrations
+In order for the application stack to work, you need to run the migrations. This will create the tables in the database.
+```sh
+# Run the migrations
+alembic upgrade head
+```
+
+#### When the model changes during development
+When the model changes, you need to create a new migration. This is done by running the following command:
+```sh
+alembic revision --autogenerate -m "Add a new column"
+```
+
 ### Run the app
 ```sh
 # Export PYTHONPATH
