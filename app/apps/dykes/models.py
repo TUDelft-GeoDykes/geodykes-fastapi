@@ -6,9 +6,7 @@ here they interact with the business logic to handle web requests and in the sch
 validating and serializing data.
 """
 import sqlalchemy as sa
-from sqlalchemy import UniqueConstraint
 from sqlalchemy.orm import relationship
-
 from app.db.models import BaseModel
 
 # Dyke model represents the main structural entity, similar to the 'dyke' table in the schema.
@@ -17,20 +15,20 @@ class Dyke(BaseModel):
     name = sa.Column(sa.String, nullable=False)  # Name of the dyke
     description = sa.Column(sa.String, nullable=True)  # Optional detailed description of the dyke
     # Relationship to Crossection, indicating one dyke can have multiple crossections.
-    crossections = relationship("Crossection", backref="dyke")
+    crossections = relationship("Crossection", back_populates="dyke")
 
 # Crossection model represents specific cross-sectional details of a dyke.
 class Crossection(BaseModel):
     __tablename__ = "crossection"  # Database table name
-    # crossection_id = sa.Column(sa.Integer, primary_key=True)  # Primary key, analogous to 'id' in the database schema
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     dyke_id = sa.Column(sa.Integer, sa.ForeignKey("dyke.id"), nullable=False)  # Foreign key linking back to Dyke
     name = sa.Column(sa.String, nullable=False)  # Name or identifier of the crossection
     description = sa.Column(sa.String, nullable=True)  # Optional detailed description of the crossection
     topology = sa.Column(sa.String, nullable=False)  # Descriptive attribute for the shape or structure
     # Relationship to Timeseries, indicating one crossection can have multiple timeseries.
-    timeseries = relationship("Reading", backref="crossection")
-    crossection_layers = relationship("CrossectionLayer", backref="crossection")
-
+    timeseries = relationship("Reading", back_populates="crossection")
+    crossection_layers = relationship("CrossectionLayer", back_populates="crossection")
+    dyke = relationship("Dyke", back_populates="crossections")
 
 class Topology(BaseModel):
     """
@@ -45,7 +43,6 @@ class Topology(BaseModel):
         to the data model (like adding additional dimensions to coordinates) without altering the database schema.
     """
     __tablename__ = "topology"
-
     coordinates = sa.Column(sa.JSON)  # Example format: [{"x": 1, "y": 2}, {"x": 3, "y": 4}]
 
     # Additional methods and properties can be added here to facilitate operations like data validation,
@@ -56,18 +53,17 @@ class CrossectionLayer(BaseModel):
     A layer is a 2D geometry composed of a top topology and a bottom topology. This model represents the layers of a crossection.
     """
     __tablename__ = "crossection_layer"
-    # Crossection id to which the layer belongs
     crossection_id = sa.Column(sa.Integer, sa.ForeignKey("crossection.id"), nullable=False)
-    # A reference later which is the topology on top that defines the layer
     top_topology_id = sa.Column(sa.Integer, sa.ForeignKey("topology.id"), nullable=False)
-    # A reference later which is the topology on bottom that defines the layer
     bottom_topology_id = sa.Column(sa.Integer, sa.ForeignKey("topology.id"), nullable=False)
     soil_type = sa.Column(sa.String, nullable=False)
+    crossection = relationship("Crossection", back_populates="crossection_layers")
+    top_topology = relationship("Topology", foreign_keys=[top_topology_id])
+    bottom_topology = relationship("Topology", foreign_keys=[bottom_topology_id])
 
-# # Units of measure are required for the timeseries
+# Units of measure are required for the timeseries
 class UnitOfMeasure(BaseModel):
     __tablename__ = 'unit_of_measure'
-    id = sa.Column(sa.Integer, primary_key=True)
     unit = sa.Column(sa.String, nullable=False, unique=True)
     description = sa.Column(sa.String, nullable=True)
 
@@ -77,12 +73,10 @@ class UnitOfMeasure(BaseModel):
 # Timeseries model is represented by timestamped readings
 class Reading(BaseModel):
     __tablename__ = "reading"  # Database table name
-    # timeseries_id = sa.Column(sa.Integer, primary_key=True)  # Primary key, analogous to 'id' in the database schema
     crossection_id = sa.Column(sa.Integer, sa.ForeignKey("crossection.id"), nullable=False)  # Foreign key linking back to Crossection
-    # Location in topology is a point in X and Y coordinates withing a crossection topology
     location_in_topology = sa.Column(sa.JSON, nullable=False)  # Location within the crossection
-    unit = sa.Column(sa.String, nullable=False)  # Unit of measure for the timeseries
-    # units_of_measure = relationship("UnitOfMeasure", backref="reading")
-    # sensor_code = sa.Column(sa.Integer, nullable=False)  # A sensor's code of location within a measurement vertical
+    unit_id = sa.Column(sa.Integer, sa.ForeignKey("unit_of_measure.id"), nullable=False)  # Foreign key linking to UnitOfMeasure
     value = sa.Column(sa.Integer, nullable=False)  # Value of the timeseries
     time = sa.Column(sa.DateTime, nullable=False)  # Timestamp for the reading
+    crossection = relationship("Crossection", back_populates="timeseries")
+    unit = relationship("UnitOfMeasure", backref="readings")

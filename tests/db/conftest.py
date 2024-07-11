@@ -149,16 +149,29 @@ def crossection(session, dyke, topologies):
     return retrieved
 
 # READING FIXTURES
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def timestamp():
     return datetime.datetime.strptime('26 Sep 2022', '%d %b %Y')
 
 @pytest.fixture(scope="function")
-def reading(session, crossection_empty, timestamp):
+def unit_of_measure(session):
+    from app.apps.dykes.models import UnitOfMeasure
+
+    unit = UnitOfMeasure(unit="mm", description="Description of this unit of measure")
+    
+    session.add(unit)
+    session.commit()
+
+    retrieved = session.query(UnitOfMeasure).filter_by(id=unit.id).first()
+    assert retrieved == unit
+    return retrieved
+
+@pytest.fixture(scope="function")
+def reading(session, crossection_empty, timestamp, unit_of_measure):
     from app.apps.dykes.models import Reading
     
     read = Reading(crossection_id=crossection_empty.id,
-                   location_in_topology=1, unit="mm",value=10,
+                   location_in_topology=1, unit=unit_of_measure, value=10,
                    time=timestamp)
     session.add(read)
     session.commit()

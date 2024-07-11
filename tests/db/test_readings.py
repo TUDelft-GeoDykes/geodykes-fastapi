@@ -18,29 +18,30 @@ def test_bad_reading(crossection_empty, session):
         session.add(wrong_read)
         session.flush() # Force the flush to the database to raise the error
 
+# UnitsOfMeasure need to be defined before we create a reading
+def test_create_unit_of_measure(session):
+    from app.apps.dykes.models import UnitOfMeasure
+
+    unit = UnitOfMeasure(unit="pressure", description="Description of this unit of measure")
+    
+    session.add(unit)
+    session.commit()
+
+    retrieved = session.query(UnitOfMeasure).filter_by(id=unit.id).first()
+    assert retrieved == unit
+    return retrieved
+
 # A reading will have an id and a relation to a specific crossection
-def test_create_reading(crossection_empty, session, timestamp):
+def test_create_reading(crossection_empty, session, timestamp, unit_of_measure):
     from app.apps.dykes.models import Reading
 
     assert isinstance(crossection_empty.timeseries, list)
     assert crossection_empty.timeseries == [] # Check if the list of timeseries is empty
 
     read = Reading(crossection_id=crossection_empty.id,
-                   location_in_topology={"x": 1, "y": 100}, unit="mm",value=10,
-                   time=timestamp)
+                   location_in_topology={"x": 1, "y": 100}, unit=unit_of_measure,
+                   value=10, time=timestamp)
     
     session.add(read)
     session.commit()
     assert crossection_empty.timeseries
-
-# def test_create_unit_of_measure(session):
-#     from app.apps.dykes.models import UnitOfMeasure
-
-#     unit = UnitOfMeasure(unit="pressure", description="Description of this unit of measure")
-    
-#     session.add(unit)
-#     session.commit()
-
-#     retrieved = session.query(UnitOfMeasure).filter_by(id=unit.id).first()
-#     assert retrieved == unit
-#     return retrieved
