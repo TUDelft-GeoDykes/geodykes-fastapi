@@ -80,3 +80,18 @@ class Reading(BaseModel):
     time = sa.Column(sa.DateTime, nullable=False)  # Timestamp for the reading
     crossection = relationship("Crossection", back_populates="timeseries")
     unit = relationship("UnitOfMeasure", backref="readings")
+
+    def __repr__(self):
+        return f"<Reading(crossection_id='{self.crossection_id}', location_in_topology='{self.location_in_topology}', unit_id='{self.unit_id}', value='{self.value}', time='{self.time}')>"
+    
+class SensorType(BaseModel):
+    __tablename__ = "sensor_type"
+    name = sa.Column(sa.String, nullable=False, unique=True)
+    details = sa.Column(sa.String, nullable=True)
+    multisensor = sa.Column(sa.Boolean, default=False)
+
+    # If multisensor is True, allow multiple units of measure otherwise only one
+    # units_of_measure = relationship("UnitOfMeasure", backref="sensor_type") if multisensor else relationship("UnitOfMeasure", uselist=False, backref="sensor_type")
+
+    def __repr__(self):
+        return f"<SensorType(name='{self.name}', details='{self.details}', multisensor='{self.multisensor}')>"
