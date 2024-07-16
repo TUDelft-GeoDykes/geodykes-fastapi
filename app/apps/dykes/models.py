@@ -6,7 +6,8 @@ here they interact with the business logic to handle web requests and in the sch
 validating and serializing data.
 """
 import sqlalchemy as sa
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, validates
+from sqlalchemy import Table, ForeignKey, Integer, Column, Boolean, String
 from app.db.models import BaseModel
 
 # Dyke model represents the main structural entity, similar to the 'dyke' table in the schema.
@@ -61,21 +62,13 @@ class CrossectionLayer(BaseModel):
     top_topology = relationship("Topology", foreign_keys=[top_topology_id])
     bottom_topology = relationship("Topology", foreign_keys=[bottom_topology_id])
 
-# Units of measure are required for the timeseries
-class UnitOfMeasure(BaseModel):
-    __tablename__ = 'unit_of_measure'
-    unit = sa.Column(sa.String, nullable=False, unique=True)
-    description = sa.Column(sa.String, nullable=True)
-
-    def __repr__(self):
-        return f"<UnitOfMeasure(unit='{self.unit}', description='{self.description}')>"
-
 # Timeseries model is represented by timestamped readings
 class Reading(BaseModel):
     __tablename__ = "reading"  # Database table name
     crossection_id = sa.Column(sa.Integer, sa.ForeignKey("crossection.id"), nullable=False)  # Foreign key linking back to Crossection
     location_in_topology = sa.Column(sa.JSON, nullable=False)  # Location within the crossection
     unit_id = sa.Column(sa.Integer, sa.ForeignKey("unit_of_measure.id"), nullable=False)  # Foreign key linking to UnitOfMeasure
+    sensor_type_id = sa.Column(sa.Integer, sa.ForeignKey("sensor_type.id"), nullable=True)
     value = sa.Column(sa.Integer, nullable=False)  # Value of the timeseries
     time = sa.Column(sa.DateTime, nullable=False)  # Timestamp for the reading
     crossection = relationship("Crossection", back_populates="timeseries")
@@ -85,13 +78,33 @@ class Reading(BaseModel):
         return f"<Reading(crossection_id='{self.crossection_id}', location_in_topology='{self.location_in_topology}', unit_id='{self.unit_id}', value='{self.value}', time='{self.time}')>"
     
 class SensorType(BaseModel):
-    __tablename__ = "sensor_type"
-    name = sa.Column(sa.String, nullable=False, unique=True)
-    details = sa.Column(sa.String, nullable=True)
-    multisensor = sa.Column(sa.Boolean, default=False)
+    __tablename__ = 'sensor_type'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False, unique=True)
+    details = Column(String, nullable=True)
+    multisensor = Column(Boolean, default=False)
+    
+    units_of_measure = relationship('UnitOfMeasure', secondary='sensor_unit_association', cascade="all, delete")
 
-    # If multisensor is True, allow multiple units of measure otherwise only one
-    # units_of_measure = relationship("UnitOfMeasure", backref="sensor_type") if multisensor else relationship("UnitOfMeasure", uselist=False, backref="sensor_type")
+    @validates('units_of_measure')
+    def validate_units(self, key, unit):
+        '''Validate the number of units for a multisensor type
+        A single sensor type cannot have more than one unit of measure.'''
+        if not self.multisensor and len(self.units_of_measure) >= 1:
+            raise ValueError("Single sensor type cannot have more than one unit of measure.")
+        return unit
+    
+class UnitOfMeasure(BaseModel):
+    __tablename__ = 'unit_of_measure'
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    unit = sa.Column(sa.String, nullable=False, unique=True)
+    description = sa.Column(sa.String, nullable=True)
 
     def __repr__(self):
-        return f"<SensorType(name='{self.name}', details='{self.details}', multisensor='{self.multisensor}')>"
+        return f"<UnitOfMeasure(unit='{self.unit}', description='{self.description}')>"
+
+# Association table for the many-to-many relationship between SensorType and UnitOfMeasure
+sensor_unit_association = Table('sensor_unit_association', BaseModel.metadata,
+    Column('sensor_type_id', Integer, ForeignKey('sensor_type.id'), primary_key=True),
+    Column('unit_of_measure_id', Integer, ForeignKey('unit_of_measure.id'), primary_key=True)
+)

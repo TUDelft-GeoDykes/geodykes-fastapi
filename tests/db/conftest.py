@@ -179,3 +179,15 @@ def reading(session, crossection_empty, timestamp, unit_of_measure):
     retrieved = session.query(Reading).filter_by(id=read.id).first()
     assert retrieved == read
     return retrieved
+
+@pytest.fixture(scope="function")
+def sensor_type(session):
+    from app.apps.dykes.models import SensorType
+
+    sensor = SensorType(name='TempSensor', details='measures temperature')
+    session.add(sensor)
+    session.commit()
+
+    retrieved = session.query(SensorType).filter_by(id=sensor.id).first()
+    assert retrieved == sensor
+    return retrieved

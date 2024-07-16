@@ -32,14 +32,15 @@ def test_create_unit_of_measure(session):
     return retrieved
 
 # A reading will have an id and a relation to a specific crossection
-def test_create_reading(crossection_empty, session, timestamp, unit_of_measure):
+def test_create_reading(crossection_empty, session, timestamp, unit_of_measure, sensor_type):
     from app.apps.dykes.models import Reading
 
     assert isinstance(crossection_empty.timeseries, list)
     assert crossection_empty.timeseries == [] # Check if the list of timeseries is empty
 
     read = Reading(crossection_id=crossection_empty.id,
-                   location_in_topology={"x": 1, "y": 100}, unit=unit_of_measure,
+                   location_in_topology={"x": 1, "y": 100}, unit_id=unit_of_measure.id,
+                   sensor_type_id=sensor_type.id,
                    value=10, time=timestamp)
     
     session.add(read)
