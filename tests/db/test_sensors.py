@@ -4,10 +4,12 @@
 - A sensor type has a name and details associated with it
 - The name cannot be duplicated in the database
 - If sensor is multisensor it must allow to have multiple units of measurement
+- A sensor can be created in association with a sensor type and a location in a specific topology
 '''
 import pytest
-from app.apps.dykes.models import SensorType, UnitOfMeasure
+from app.apps.dykes.models import SensorType, UnitOfMeasure, LocationInTopology, Sensor
 
+# Sensor types must be created on demand
 def test_create_sensor_type(session):
     sensor_type = SensorType(name='TempSensor', details='measures temperature')
     session.add(sensor_type)
@@ -51,3 +53,21 @@ def test_add_units_to_sensor(session, unit_of_measure):
     session.commit()
 
     assert len(sensor_type_multi.units_of_measure) == 2
+
+
+def test_create_LocationInTopology(session, topology):
+    location = LocationInTopology(topology_id=topology.id, coordinates=[1,2])
+    session.add(location)
+    session.commit()
+    assert location.id is not None
+
+
+# A sensor has to be associated with a sensor type and a location in a specific topology
+def test_create_sensor(session, sensor_type, topology):
+    location = LocationInTopology(topology_id=topology.id, coordinates=[1,2])
+    sensor = Sensor(sensor_type=sensor_type, location=location, name="TempSensor")
+    session.add(sensor)
+    session.commit()
+    assert sensor.id is not None
+    assert sensor.sensor_type == sensor_type
+    assert sensor.location == location

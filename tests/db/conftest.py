@@ -167,12 +167,13 @@ def unit_of_measure(session):
     return retrieved
 
 @pytest.fixture(scope="function")
-def reading(session, crossection_empty, timestamp, unit_of_measure):
+def reading(session, crossection_empty, timestamp, unit_of_measure, location_in_topology):
     from app.apps.dykes.models import Reading
     
     read = Reading(crossection_id=crossection_empty.id,
-                   location_in_topology=1, unit=unit_of_measure, value=10,
+                   location_in_topology_id=location_in_topology.id, unit=unit_of_measure, value=10,
                    time=timestamp)
+                   
     session.add(read)
     session.commit()
 
@@ -189,5 +190,32 @@ def sensor_type(session):
     session.commit()
 
     retrieved = session.query(SensorType).filter_by(id=sensor.id).first()
+    assert retrieved == sensor
+    return retrieved
+
+@pytest.fixture(scope="function")
+def location_in_topology(session, topology):
+    from app.apps.dykes.models import LocationInTopology
+    
+    # Should only allow for two values X, Y, we use a list of two values
+    # because using a dictionary makes things more complicated
+    # For example this invalid coordinate would pass: {"x": 1, "y": 2, "x": 3}
+    location = LocationInTopology(topology_id=topology.id, coordinates=[1,2])
+    session.add(location)
+    session.commit()
+
+    retrieved = session.query(LocationInTopology).filter_by(id=location.id).first()
+    assert retrieved == location
+    return retrieved
+
+@pytest.fixture(scope="function")
+def sensor(session, sensor_type):
+    from app.apps.dykes.models import Sensor
+
+    sensor = Sensor(name='Test Sensor', sensor_type_id=sensor_type.id)
+    session.add(sensor)
+    session.commit()
+
+    retrieved = session.query(Sensor).filter_by(id=sensor.id).first()
     assert retrieved == sensor
     return retrieved

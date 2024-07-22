@@ -32,17 +32,42 @@ def test_create_unit_of_measure(session):
     return retrieved
 
 # A reading will have an id and a relation to a specific crossection
-def test_create_reading(crossection_empty, session, timestamp, unit_of_measure, sensor_type):
+def test_create_reading(crossection_empty, session, timestamp, unit_of_measure, sensor_type, location_in_topology):
     from app.apps.dykes.models import Reading
 
     assert isinstance(crossection_empty.timeseries, list)
     assert crossection_empty.timeseries == [] # Check if the list of timeseries is empty
 
     read = Reading(crossection_id=crossection_empty.id,
-                   location_in_topology={"x": 1, "y": 100}, unit_id=unit_of_measure.id,
+                   location_in_topology_id=location_in_topology.id, unit_id=unit_of_measure.id,
                    sensor_type_id=sensor_type.id,
                    value=10, time=timestamp)
     
     session.add(read)
     session.commit()
     assert crossection_empty.timeseries
+
+# Write a test to validate this line from the LocationInTopology model
+def test_location_in_topology_coordinates(session, topology):
+    from app.apps.dykes.models import LocationInTopology 
+
+    # Test case 1: Valid coordinates
+    valid_coordinates = [1, 2]
+    location = LocationInTopology(topology_id=topology.id, coordinates=valid_coordinates)
+    session.add(location)
+    session.commit()
+    assert location.id is not None
+
+    # Test case 2: Invalid coordinates (more than 2 values)
+    invalid_coordinates = [1, 2, 3]
+    with pytest.raises(ValueError):
+        location = LocationInTopology(topology_id=topology.id, coordinates=invalid_coordinates)
+        session.add(location)
+        session.commit()
+
+    # Test case 3: Invalid coordinates (less than 2 values)
+    invalid_coordinates = [1]
+    with pytest.raises(ValueError):
+        location = LocationInTopology(topology_id=topology.id, coordinates=invalid_coordinates)
+        session.add(location)
+        session.commit()

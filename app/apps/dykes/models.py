@@ -62,17 +62,41 @@ class CrossectionLayer(BaseModel):
     top_topology = relationship("Topology", foreign_keys=[top_topology_id])
     bottom_topology = relationship("Topology", foreign_keys=[bottom_topology_id])
 
+class LocationInTopology(BaseModel):
+    '''This model represents a location in a topology. 
+    It is used to store the coordinates of a location in a topology of a reading and sensor.
+    '''
+    __tablename__ = "location_in_topology"    
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    coordinates = sa.Column(sa.JSON, nullable=False) 
+    topology_id = sa.Column(sa.Integer, sa.ForeignKey("topology.id"), nullable=False)
+
+    def __repr__(self):
+        return f"<LocationInTopologys(id={self.id}, coordinates={self.coordinates})>"
+
+    # Should only allow for two values X, Y, we use a list of two values
+    # because using a dictionary makes things more complicated
+    # For example this invalid coordinate would pass: {"x": 1, "y": 2, "x": 3}
+    @validates('coordinates')
+    def validate_coordinates(self, key, value):
+        if not isinstance(value, list) or len(value) != 2:
+            raise ValueError("Coordinates must be a list of two values")
+        return value
+    
 # Timeseries model is represented by timestamped readings
 class Reading(BaseModel):
     __tablename__ = "reading"  # Database table name
     crossection_id = sa.Column(sa.Integer, sa.ForeignKey("crossection.id"), nullable=False)  # Foreign key linking back to Crossection
-    location_in_topology = sa.Column(sa.JSON, nullable=False)  # Location within the crossection
+    # location_in_topology = sa.Column(sa.JSON, nullable=False)
+    location_in_topology_id = sa.Column(sa.Integer, sa.ForeignKey("location_in_topology.id"), nullable=True) # This is inherited from the sensor location creating the reads
     unit_id = sa.Column(sa.Integer, sa.ForeignKey("unit_of_measure.id"), nullable=False)  # Foreign key linking to UnitOfMeasure
     sensor_type_id = sa.Column(sa.Integer, sa.ForeignKey("sensor_type.id"), nullable=True)
     value = sa.Column(sa.Integer, nullable=False)  # Value of the timeseries
     time = sa.Column(sa.DateTime, nullable=False)  # Timestamp for the reading
     crossection = relationship("Crossection", back_populates="timeseries")
     unit = relationship("UnitOfMeasure", backref="readings")
+    location = relationship("LocationInTopology")
+
 
     def __repr__(self):
         return f"<Reading(crossection_id='{self.crossection_id}', location_in_topology='{self.location_in_topology}', unit_id='{self.unit_id}', value='{self.value}', time='{self.time}')>"
@@ -85,6 +109,7 @@ class SensorType(BaseModel):
     multisensor = Column(Boolean, default=False)
     
     units_of_measure = relationship('UnitOfMeasure', secondary='sensor_unit_association', cascade="all, delete")
+    sensors = relationship('Sensor', back_populates='sensor_type')
 
     @validates('units_of_measure')
     def validate_units(self, key, unit):
@@ -104,7 +129,24 @@ class UnitOfMeasure(BaseModel):
         return f"<UnitOfMeasure(unit='{self.unit}', description='{self.description}')>"
 
 # Association table for the many-to-many relationship between SensorType and UnitOfMeasure
+# A sensor type can measure multiple units, and a unit can be measured by multiple sensor types. 
 sensor_unit_association = Table('sensor_unit_association', BaseModel.metadata,
     Column('sensor_type_id', Integer, ForeignKey('sensor_type.id'), primary_key=True),
     Column('unit_of_measure_id', Integer, ForeignKey('unit_of_measure.id'), primary_key=True)
 )
+
+class Sensor(BaseModel):
+    ''' Sensors need to be monitored and managed, as it is common for them to fail and require maintenance or replacement.
+    '''
+    __tablename__ = "sensor"
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    name = sa.Column(sa.String, nullable=False)
+    sensor_type_id = sa.Column(sa.Integer, sa.ForeignKey("sensor_type.id"), nullable=False)
+    location_in_topology_id = sa.Column(sa.Integer, sa.ForeignKey("location_in_topology.id"), nullable=True)
+    is_active = sa.Column(sa.Boolean, default=True)
+
+    sensor_type = relationship("SensorType", back_populates="sensors")
+    location = relationship("LocationInTopology")
+
+    def __repr__(self):
+        return f"<Sensor(id={self.id}, name={self.name}, sensor_type_id={self.sensor_type_id}, location_id={self.location_in_topology_id}, is_active={self.is_active})>"
