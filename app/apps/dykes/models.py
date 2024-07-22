@@ -13,6 +13,7 @@ from app.db.models import BaseModel
 # Dyke model represents the main structural entity, similar to the 'dyke' table in the schema.
 class Dyke(BaseModel):
     __tablename__ = "dyke"  # Database table name
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     name = sa.Column(sa.String, nullable=False)  # Name of the dyke
     description = sa.Column(sa.String, nullable=True)  # Optional detailed description of the dyke
     # Relationship to Crossection, indicating one dyke can have multiple crossections.
@@ -54,6 +55,7 @@ class CrossectionLayer(BaseModel):
     A layer is a 2D geometry composed of a top topology and a bottom topology. This model represents the layers of a crossection.
     """
     __tablename__ = "crossection_layer"
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     crossection_id = sa.Column(sa.Integer, sa.ForeignKey("crossection.id"), nullable=False)
     top_topology_id = sa.Column(sa.Integer, sa.ForeignKey("topology.id"), nullable=False)
     bottom_topology_id = sa.Column(sa.Integer, sa.ForeignKey("topology.id"), nullable=False)
