@@ -87,7 +87,6 @@ class LocationInTopology(BaseModel):
 class Reading(BaseModel):
     __tablename__ = "reading"  # Database table name
     crossection_id = sa.Column(sa.Integer, sa.ForeignKey("crossection.id"), nullable=False)  # Foreign key linking back to Crossection
-    # location_in_topology = sa.Column(sa.JSON, nullable=False)
     location_in_topology_id = sa.Column(sa.Integer, sa.ForeignKey("location_in_topology.id"), nullable=True) # This is inherited from the sensor location creating the reads
     unit_id = sa.Column(sa.Integer, sa.ForeignKey("unit_of_measure.id"), nullable=False)  # Foreign key linking to UnitOfMeasure
     sensor_type_id = sa.Column(sa.Integer, sa.ForeignKey("sensor_type.id"), nullable=True)
