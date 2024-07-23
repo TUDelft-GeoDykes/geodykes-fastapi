@@ -70,6 +70,11 @@ Task is a task runner / build tool that aims to be simpler and easier to use tha
 ## Local development setup
 After installing everything and all the above works, you can also setup a local setup, to run the application locally and connect to the database container.
 
+### Deploy only database container
+```sh
+docker-compose up -d db
+```
+
 
 ### Activate your environment
 ```sh
