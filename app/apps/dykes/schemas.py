@@ -2,6 +2,9 @@
 This script, schemas.py, serves as a central location for defining data validation and serialization schemas using Pydantic for the FastAPI application. These schemas are crucial for enforcing business rules and ensuring data integrity as information flows in and out of the application's endpoints.
 
 """
+from datetime import datetime
+from typing import List, Optional
+
 import pydantic
 from typing import Optional
 from pydantic import BaseModel, Field, PositiveInt
@@ -12,7 +15,7 @@ class Base(BaseModel):
     model_config = pydantic.ConfigDict(from_attributes=True)
 
 # DykeBase serves as an abstract base class that defines common attributes and validations for all dyke models.
-class DykeBase(Base):
+class DykeSchema(Base):
     """
     Abstract base class for dyke models, defining essential attributes and providing a foundation for more specific dyke models.
     It utilizes Python's inheritance mechanism to allow other models to extend this base class without duplicating common attributes.
@@ -25,13 +28,96 @@ class DykeBase(Base):
     description: Optional[str] = Field(None, description="Additional information about the dyke")
 
 # DykeCreate is designed for creating dyke records, inheriting common fields from DykeBase and potentially adding more specific ones.
-class DykeCreate(DykeBase):
+class DykeCreate(DykeSchema):
     pass
 
 # Dyke model includes a unique identifier and extends DykeBase, showcasing how inheritance can add additional properties to a base configuration.
-class Dyke(DykeBase):
-    dyke_id: PositiveInt | None = None  # Unique identifier for the dyke, added to the basic structure provided by DykeBase.
+# class Dyke(DykeBase):
+#     dyke_id: PositiveInt | None = None  # Unique identifier for the dyke, added to the basic structure provided by DykeBase.
 
 # Dykes is a container model for handling collections of Dyke instances, demonstrating aggregation of models in a list.
 class Dykes(Base):
-    items: list[Dyke]  # Aggregated list of Dyke instances, leveraging Pydantic's data validation for lists of complex models.
+    items: list[DykeSchema]  # Aggregated list of Dyke instances, leveraging Pydantic's data validation for lists of complex models.
+
+
+class TopologySchema(BaseModel):
+    id: int
+    coordinates: List[dict]
+
+    class Config:
+        orm_mode = True
+
+
+class LocationInTopologySchema(BaseModel):
+    id: int
+    coordinates: List[float]
+    topology: TopologySchema
+
+    class Config:
+        orm_mode = True
+
+
+class CrossectionSchema(BaseModel):
+    id: int
+    name: str
+    description: Optional[str]
+    topology: str
+    dyke: DykeSchema
+
+    class Config:
+        orm_mode = True
+
+
+class UnitOfMeasureSchema(BaseModel):
+    id: int
+    unit: str
+    description: Optional[str]
+
+    class Config:
+        orm_mode = True
+
+
+class SensorTypeSchema(BaseModel):
+    id: int
+    name: str
+    details: Optional[str]
+    multisensor: bool
+
+    class Config:
+        orm_mode = True
+
+
+class SensorSchema(BaseModel):
+    id: int
+    name: str
+    sensor_type: SensorTypeSchema
+    location: LocationInTopologySchema
+    is_active: bool
+
+    class Config:
+        orm_mode = True
+
+
+class ReadingSchema(BaseModel):
+    id: int
+    crossection: CrossectionSchema
+    location_in_topology: Optional[LocationInTopologySchema] = None
+    unit: UnitOfMeasureSchema
+    sensor: Optional[SensorSchema] = None
+    value: float
+    time: datetime
+
+    class Config:
+        orm_mode = True
+
+class Readings(Base):
+    items: list[ReadingSchema]
+
+# For creating or updating readings
+class ReadingCreateUpdateSchema(BaseModel):
+    crossection_id: int
+    location_in_topology_id: Optional[int]
+    unit_id: int
+    sensor_id: Optional[int]
+    value: int
+    time: datetime
