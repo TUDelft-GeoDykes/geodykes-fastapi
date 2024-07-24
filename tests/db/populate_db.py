@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Python script to populate your development database with synthetic data. 
 This script uses SQLAlchemy to interact with the database and will create 4 different dykes, 5 different types of sensors, 5 different units, and 300 readings
@@ -78,20 +79,31 @@ async def create_sensor_types(session: AsyncSession):
     await session.commit()
     return sensor_types
 
-async def create_locations_and_sensors(session: AsyncSession, crossections, sensor_types):
-    # CSV table to be read
+async def create_locations_and_sensors(session: AsyncSession, sensor_types):
     locations = []
     sensors = []
+
+    # Fetch all topology IDs
+    result = await session.execute(sa.select(Topology.id))
+    topology_ids = [row[0] for row in result.fetchall()]
+
     for i in range(1, 6):
-        print("DEBUG")
-        print(random.choice(crossections).id)
-        location = LocationInTopology(coordinates=[random.uniform(0, 10), random.uniform(0, 10)], topology_id=random.choice(crossections).id)
-        locations.append(location)
+        if not topology_ids:
+            raise ValueError("No topologies available in the database.")
+
+        topology_id = random.choice(topology_ids)  # Ensure topology_id is valid
+        location = LocationInTopology(coordinates=[random.uniform(0, 40), random.uniform(0, 40)], topology_id=topology_id)
+        session.add(location)
+        await session.flush()  # Ensure location ID is generated
+        locations.append(location)  # Append to locations list
+
         sensors.append(Sensor(name=f"Sensor {i}", sensor_type_id=random.choice(sensor_types).id, location_in_topology_id=location.id, is_active=True))
-    session.add_all(locations)
-    session.add_all(sensors)
-    await session.commit()
+    
+    session.add_all(sensors)  # Add all sensors
+    await session.commit()  # Commit both locations and sensors
+
     return locations, sensors
+
 
 async def create_readings(session: AsyncSession, crossections, locations, units, sensor_types):
     readings = []
@@ -116,8 +128,8 @@ async def create_data():
         crossections = await create_crossections(session, dykes)
         units = await create_units(session)
         sensor_types = await create_sensor_types(session)
-        locations, sensors = await create_locations_and_sensors(session, crossections, sensor_types)
-        # readings = await create_readings(session, crossections, locations, units, sensor_types)
+        locations, sensors = await create_locations_and_sensors(session, sensor_types)
+        readings = await create_readings(session, crossections, locations, units, sensor_types)
 
 async def reset_database():
     engine = create_async_engine(DATABASE_URL, echo=True)
@@ -137,12 +149,6 @@ async def reset_database():
         
         # Enable foreign key checks
         await conn.execute(sa.text("SET session_replication_role = 'origin';"))
-
-# async def reset_database():
-#     engine = create_async_engine(DATABASE_URL, echo=True)
-#     async with engine.begin() as conn:
-#         await conn.execute(sa.text("DROP SCHEMA public CASCADE;"))
-#         await conn.execute(sa.text("CREATE SCHEMA public;"))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Populate development database with synthetic data.')
