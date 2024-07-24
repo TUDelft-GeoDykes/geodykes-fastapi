@@ -98,17 +98,31 @@ class SensorSchema(BaseModel):
         orm_mode = True
 
 
+# class ReadingSchema(BaseModel):
+#     id: int
+#     crossection: CrossectionSchema
+#     location_in_topology: Optional[LocationInTopologySchema] = None
+#     unit: UnitOfMeasureSchema
+#     sensor: Optional[SensorSchema] = None
+#     value: float
+#     time: datetime
+
+#     class Config:
+#         orm_mode = True
+
+
 class ReadingSchema(BaseModel):
     id: int
-    crossection: CrossectionSchema
-    location_in_topology: Optional[LocationInTopologySchema] = None
-    unit: UnitOfMeasureSchema
-    sensor: Optional[SensorSchema] = None
+    crossection: str
+    location_in_topology: List[float]
+    unit: str
     value: float
     time: datetime
 
     class Config:
         orm_mode = True
+        from_attributes = True  # Enable from_orm method
+
 
 class Readings(Base):
     items: list[ReadingSchema]

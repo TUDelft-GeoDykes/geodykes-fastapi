@@ -47,10 +47,6 @@ router = fastapi.APIRouter()
 async def list_dykes() -> schemas.Dykes:
     # Fetch all dyke entries from the database using the Dyke model's all() method.
     objects = await models.Dyke.all()
-
-    # DEBUG: Leave the first 10:
-    # objects = objects[:10]
-    # Convert the list of Dyke model instances to Dykes schema for response.
     return typing.cast(schemas.Dykes, {"items": objects[:2]})
 
 @router.get("/dykes/{dyke_id}/")
@@ -63,35 +59,6 @@ async def get_dyke(dyke_id: int) -> schemas.DykeSchema:
     # Serialize the Dyke model instance into Dyke schema and return.
     return typing.cast(schemas.DykeSchema, instance)
 
-# @router.get("/readings/")
-# async def list_readings() -> schemas.Readings:
-#     # Fetch all readings entries from the database
-#     objects = await models.Reading.all()
-#     print('DEBUG')
-#     print(objects[:2])
-#     if not objects:
-#         raise fastapi.HTTPException(status_code=404, detail="No readings found")
-#     return typing.cast(schemas.Readings, {"items": objects[:1]})
-
-# @router.get("/readings/", response_model=List[ReadingSchema])
-# async def get_readings() -> schemas.Readings:
-#     readings = db.query(models.Reading).all()
-#     if not readings:
-#         raise fastapi.HTTPException(status_code=404, detail="No readings found")
-#     return readings
-
-# @router.get("/readings/", response_model=schemas.Readings)
-# async def list_readings(db: AsyncSession = Depends(get_db)) -> schemas.Readings:
-#     result = await db.execute(select(models.Reading).options(
-#         selectinload(models.Reading.crossection),
-#         selectinload(models.Reading.location_in_topology),
-#         selectinload(models.Reading.unit),
-#         selectinload(models.Reading.sensor)
-#     ))
-#     objects = result.scalars().all()
-#     if not objects:
-#         raise HTTPException(status_code=404, detail="No readings found")
-#     return schemas.Readings(items=[schemas.ReadingSchema.from_orm(obj) for obj in objects])
 
 @router.get("/readings/", response_class=JSONResponse)
 async def list_readings(db: AsyncSession = Depends(get_db)):
@@ -99,28 +66,32 @@ async def list_readings(db: AsyncSession = Depends(get_db)):
         select(models.Reading)
         .options(
             selectinload(models.Reading.crossection),
-            # selectinload(models.Reading.location_in_topology),
-            selectinload(models.Reading.unit),
-            # selectinload(models.Reading.sensor_type)
+            selectinload(models.Reading.location),
+            selectinload(models.Reading.unit)
         )
     )
     objects = result.scalars().all()
     if not objects:
         raise HTTPException(status_code=404, detail="No readings found")
     
-    # Convert ORM objects to dicts manually for debugging
+    # Convert ORM objects to dictionary representation
     def convert_to_dict(obj):
         if not obj:
             return None
         return {
             "id": obj.id,
-            "crossection": obj.crossection and obj.crossection.id,
-            # "location_in_topology": obj.location_in_topology and obj.location_in_topology.id,
-            "unit": obj.unit and obj.unit.id,
-            # "sensor": obj.sensor and obj.sensor.id,
+            "crossection": obj.crossection and obj.crossection.name,
+            "location_in_topology": obj.location and obj.location.coordinates,
+            "unit": obj.unit and obj.unit.unit,
             "value": obj.value,
             "time": obj.time.isoformat()
         }
     
     items = [convert_to_dict(obj) for obj in objects]
-    return JSONResponse(content={"items": items})
+
+    if not objects:
+        raise HTTPException(status_code=404, detail="No readings found")
+    
+    # Return validated readings schema
+    return schemas.Readings(items=items)
+   
