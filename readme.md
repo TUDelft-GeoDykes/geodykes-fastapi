@@ -130,4 +130,14 @@ source export-env.sh
 poetry run uvicorn app.application:application --reload
 ```
 
+## Licensing and waiver
+
+Licensed under MIT, subject to waiver:
+
+Technische Universiteit Delft hereby disclaims all copyright interest in the program “geodykes-app” (A web application and system to monitor and visualize dykes) written by the Author(s).
+
+Prof.dr.ir. Stefan Aarninkhof, Dean of Civil Engineering and Geosciences
+
+Copyright (c) 2022 Jose Carlos Urra Llanusa, Ching-Yu Chao, Selin Kubilay.
+
 
