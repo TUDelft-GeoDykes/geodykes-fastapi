@@ -1,12 +1,8 @@
-# sensor_dashboard/frontend/dashboard.py
-
 import dash
 import dash_table
 import dash_bootstrap_components as dbc
 from dash import html, dcc
-import pandas as pd
 import requests
-from dash.dash_table.Format import Group
 
 # Define your FastAPI endpoint
 API_BASE_URL = "http://localhost:8000/api/readings"
@@ -23,16 +19,11 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 # Fetch readings data
 readings_data = fetch_readings()
 
-# Convert to DataFrame for easier manipulation
-df = pd.DataFrame(readings_data)
-
-# Assuming df is your DataFrame
-df[['location_x', 'location_y']] = pd.DataFrame(df['location_in_topology'].tolist(), index=df.index)
-
-# Drop the original location_in_topology column if it's no longer needed
-df.drop('location_in_topology', axis=1, inplace=True)
-
-df.drop('id', axis=1, inplace=True)
+# Process readings data
+for item in readings_data:
+    item['location_x'], item['location_y'] = item['location_in_topology']
+    del item['location_in_topology']
+    del item['id']
 
 # Layout of the Dash app
 app.layout = dbc.Container(
@@ -47,8 +38,8 @@ app.layout = dbc.Container(
             dbc.Col(
                 dash_table.DataTable(
                     id="readings-table",
-                    columns=[{"name": i, "id": i} for i in df.columns],
-                    data=df.to_dict("records"),
+                    columns=[{"name": i, "id": i} for i in readings_data[0].keys()],
+                    data=readings_data,
                     style_table={"overflowX": "auto"},
                     style_cell={
                         "height": "auto",
