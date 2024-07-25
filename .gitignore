@@ -7,7 +7,7 @@ __pycache__/*
 .vscode
 .idea
 .DS_Store
-.env
+.env*
 .mypy_cache
 .ruff_cache
 .pytest_cache
