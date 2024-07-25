@@ -67,7 +67,7 @@ Task is a task runner / build tool that aims to be simpler and easier to use tha
 5. To see the webapp go to this url: `localhost:8000/docs`
 
 
-## Local development setup
+## Local development setup for the backend
 After installing everything and all the above works, you can also setup a local setup, to run the application locally and connect to the database container.
 
 ### Deploy only database container
@@ -119,3 +119,31 @@ source .env # This will export the environment variables declaed in the .env fil
 echo ${DB_HOST} # should print localhost
 ```
 
+## Local development setup for the frontend
+### Running the Frontend Application in Development Setup
+
+1. **Navigate to the dashboard directory**:
+   ```sh
+   cd root/dashboard
+   ```
+
+2. **Install dependencies and activate the virtual environment**:
+   ```sh
+   poetry install
+   poetry shell
+   ```
+
+3. **Add necessary packages**:
+   ```sh
+   poetry add dash_bootstrap_components pandas
+   ```
+
+4. **Run the Dash application**:
+   ```sh
+   python dash-app.py
+   ```
+
+
+### Access the Dashboard
+
+Open your browser and go to `http://localhost:8050`.
