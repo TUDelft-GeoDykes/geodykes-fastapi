@@ -129,18 +129,6 @@ export PYTHONPATH="$(poetry env info --path)/lib/python3.12/site-packages":$PYTH
 source export-env.sh 
 poetry run uvicorn app.application:application --reload
 ```
-
-## Licensing and waiver
-
-Licensed under MIT, subject to waiver:
-
-Technische Universiteit Delft hereby disclaims all copyright interest in the program “geodykes-app” (A web application and system to monitor and visualize dykes) written by the Author(s).
-
-Prof.dr.ir. Stefan Aarninkhof, Dean of Civil Engineering and Geosciences
-
-Copyright (c) 2022 Jose Carlos Urra Llanusa, Ching-Yu Chao, Selin Kubilay.
-
-
 ## Local development setup for the frontend
 ### Running the Frontend Application in Development Setup
 
@@ -165,7 +153,18 @@ Copyright (c) 2022 Jose Carlos Urra Llanusa, Ching-Yu Chao, Selin Kubilay.
    python dash-app.py
    ```
 
-
 ### Access the Dashboard
 
 Open your browser and go to `http://localhost:8050`.
+## Licensing and waiver
+
+Licensed under MIT, subject to waiver:
+
+Technische Universiteit Delft hereby disclaims all copyright interest in the program “geodykes-app” (A web application and system to monitor and visualize dykes) written by the Author(s).
+
+Prof.dr.ir. Stefan Aarninkhof, Dean of Civil Engineering and Geosciences
+
+Copyright (c) 2022 Jose Carlos Urra Llanusa, Ching-Yu Chao, Selin Kubilay.
+
+
+
