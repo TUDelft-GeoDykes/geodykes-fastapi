@@ -25,17 +25,26 @@ services:
       # Environment variables for debugging and database echo
       - DEBUG=true
       - DB_ECHO=true
+    env_file:
+      # Load environment variables from a file
+      - .env-production
+    
+    # attempt to apply the database upgrade. If the upgrade command fails 
+    # (for example, because the upgrade has already been applied), 
+    # the true command will be executed, effectively ignoring the error.
     command: >
-      sh -c "alembic upgrade head &&
-             python -m app"
+      sh -c "alembic upgrade head || true && python -m app"  
+
+    networks:
+      - geodykes-network
 
   # Service for the database
   db:
     image: postgres:14
     restart: always
-    environment:
-      # Setting the default user's password for PostgreSQL
-      - POSTGRES_PASSWORD=password
+    env_file:
+      # Load environment variables from a file
+      - .env-production
     ports:
     - "5432:5432"  # Expose port 5432 on the host to port 5432 on the container
     volumes:
@@ -47,7 +56,13 @@ services:
       interval: 1s
       timeout: 5s
       retries: 15
+    networks:
+      - geodykes-network
 
 # Named volumes for the database
 volumes:
   pgdata:
+
+networks:
+  geodykes-network:
+    driver: bridge

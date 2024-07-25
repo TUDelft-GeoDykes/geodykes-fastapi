@@ -1,9 +1,10 @@
 ## Async template on FastAPI and SQLAlchemy 1.4
 
-[![GitHub issues](https://img.shields.io/github/issues/lesnik512/fast-api-sqlalchemy-template)](https://github.com/lesnik512/fast-api-sqlalchemy-template/issues)
-[![GitHub forks](https://img.shields.io/github/forks/lesnik512/fast-api-sqlalchemy-template)](https://github.com/lesnik512/fast-api-sqlalchemy-template/network)
-[![GitHub stars](https://img.shields.io/github/stars/lesnik512/fast-api-sqlalchemy-template)](https://github.com/lesnik512/fast-api-sqlalchemy-template/stargazers)
-[![GitHub license](https://img.shields.io/github/license/lesnik512/fast-api-sqlalchemy-template)](https://github.com/lesnik512/fast-api-sqlalchemy-template/blob/main/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/TUDelft-GeoDykes/geodykes-fastapi)](https://github.com/TUDelft-GeoDykes/geodykes-fastapi/issues)
+[![GitHub forks](https://img.shields.io/github/forks/TUDelft-GeoDykes/geodykes-fastapi)](https://github.com/TUDelft-GeoDykes/geodykes-fastapi/network)
+[![GitHub stars](https://img.shields.io/github/stars/TUDelft-GeoDykes/geodykes-fastapi)](https://github.com/TUDelft-GeoDykes/geodykes-fastapi/stargazers)
+[![GitHub license](https://img.shields.io/github/license/TUDelft-GeoDykes/geodykes-fastapi)](https://github.com/TUDelft-GeoDykes/geodykes-fastapi/blob/main/LICENSE)
+
 
 ### Description
 Production-ready dockerized async REST API on FastAPI with SQLAlchemy and PostgreSQL
@@ -62,9 +63,17 @@ Task is a task runner / build tool that aims to be simpler and easier to use tha
 - `task -a` - list of all tasks
 
 ## Steps to deploy the app
-
-1. Deploy locally with `docker-compose up`
-5. To see the webapp go to this url: `localhost:8000/docs`
+Check the docker-compose file to see the services that are being deployed, and how they are setup.
+1. Make sure to have a `.env-production` file in the root directory with the following variables:
+```
+# ./.env-production
+DB_HOST=db # This is the name of the service in the docker-compose file
+DB_USER=postgres
+DB_PASS=password
+DB_DATABASE=postgres
+```
+2. Deploy locally with `docker-compose up`
+3. To see the webapp docs go to this url: `localhost:8000/docs`
 
 
 ## Local development setup for the backend
@@ -87,6 +96,12 @@ These are things I needed to do in MacOS. You might not to do all these steps in
 source $(poetry env info --path)/bin/activate
 python3 app/application.py # Make sure that you can run the app
 ```
+## Make sure to load environment variables
+```sh
+source .env # This will export the environment variables declared in the .env file
+echo ${DB_HOST} # should print localhost
+```
+
 ### Run pytest most tests should pass
 ```
 pytest
@@ -114,10 +129,17 @@ export PYTHONPATH="$(poetry env info --path)/lib/python3.12/site-packages":$PYTH
 source export-env.sh 
 poetry run uvicorn app.application:application --reload
 ```
-# Make sure to load environment variables
-source .env # This will export the environment variables declaed in the .env file
-echo ${DB_HOST} # should print localhost
-```
+
+## Licensing and waiver
+
+Licensed under MIT, subject to waiver:
+
+Technische Universiteit Delft hereby disclaims all copyright interest in the program “geodykes-app” (A web application and system to monitor and visualize dykes) written by the Author(s).
+
+Prof.dr.ir. Stefan Aarninkhof, Dean of Civil Engineering and Geosciences
+
+Copyright (c) 2022 Jose Carlos Urra Llanusa, Ching-Yu Chao, Selin Kubilay.
+
 
 ## Local development setup for the frontend
 ### Running the Frontend Application in Development Setup
