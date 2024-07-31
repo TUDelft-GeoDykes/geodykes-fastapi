@@ -91,12 +91,15 @@ class Reading(BaseModel):
     crossection_id = sa.Column(sa.Integer, sa.ForeignKey("crossection.id"), nullable=False)  # Foreign key linking back to Crossection
     location_in_topology_id = sa.Column(sa.Integer, sa.ForeignKey("location_in_topology.id"), nullable=True) # This is inherited from the sensor location creating the reads
     unit_id = sa.Column(sa.Integer, sa.ForeignKey("unit_of_measure.id"), nullable=False)  # Foreign key linking to UnitOfMeasure
-    sensor_type_id = sa.Column(sa.Integer, sa.ForeignKey("sensor_type.id"), nullable=True)
+    sensor_type_id = sa.Column(sa.Integer, sa.ForeignKey("sensor_type.id"), nullable=False)
+    sensor_id = sa.Column(sa.Integer, sa.ForeignKey("sensor.id"), nullable=True) # Readings association with a sensor is optional
     value = sa.Column(sa.Integer, nullable=False)  # Value of the timeseries
     time = sa.Column(sa.DateTime, nullable=False)  # Timestamp for the reading
     crossection = relationship("Crossection", back_populates="timeseries")
     unit = relationship("UnitOfMeasure", backref="readings")
     location = relationship("LocationInTopology")
+    sensor = relationship("Sensor", back_populates="readings")
+
 
 
     def __repr__(self):
@@ -148,6 +151,8 @@ class Sensor(BaseModel):
 
     sensor_type = relationship("SensorType", back_populates="sensors")
     location = relationship("LocationInTopology")
+    readings = relationship("Reading", back_populates="sensor")
+
 
     def __repr__(self):
         return f"<Sensor(id={self.id}, name={self.name}, sensor_type_id={self.sensor_type_id}, location_id={self.location_in_topology_id}, is_active={self.is_active})>"
