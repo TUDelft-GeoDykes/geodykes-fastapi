@@ -103,7 +103,7 @@ class Reading(BaseModel):
 
 
     def __repr__(self):
-        return f"<Reading(crossection_id='{self.crossection_id}', location_in_topology='{self.location_in_topology}', unit_id='{self.unit_id}', value='{self.value}', time='{self.time}')>"
+        return f"<Reading(crossection_id='{self.crossection_id}', location_in_topology='{self.location_in_topology_id}', unit_id='{self.unit_id}', value='{self.value}', time='{self.time}')>"
     
 class SensorType(BaseModel):
     __tablename__ = 'sensor_type'
