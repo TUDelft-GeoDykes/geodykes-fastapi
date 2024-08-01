@@ -97,21 +97,7 @@ class SensorSchema(BaseModel):
     class Config:
         orm_mode = True
 
-
-# class ReadingSchema(BaseModel):
-#     id: int
-#     crossection: CrossectionSchema
-#     location_in_topology: Optional[LocationInTopologySchema] = None
-#     unit: UnitOfMeasureSchema
-#     sensor: Optional[SensorSchema] = None
-#     value: float
-#     time: datetime
-
-#     class Config:
-#         orm_mode = True
-
-
-class ReadingSchema(BaseModel):
+class Reading(BaseModel):
     id: int
     crossection: str
     location_in_topology: List[float]
@@ -125,7 +111,7 @@ class ReadingSchema(BaseModel):
 
 
 class Readings(Base):
-    items: list[ReadingSchema]
+    items: list[Reading]
 
 # For creating or updating readings
 class ReadingCreateUpdateSchema(BaseModel):

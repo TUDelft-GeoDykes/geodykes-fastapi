@@ -9,7 +9,7 @@ from app.repositories.database_repository import DatabaseReadingRepository
 from app.repositories.inmemory_repository import InMemoryReadingRepository
 from app.repositories.repository_interface import ReadingRepository
 
-def get_reading_repository(db: AsyncSession = Depends(get_db)) -> ReadingRepository:
+async def get_reading_repository(db = Depends(get_db)) -> ReadingRepository:
     # You can switch the repository here as needed
     return DatabaseReadingRepository(db)
     # return InMemoryReadingRepository(your_in_memory_data)

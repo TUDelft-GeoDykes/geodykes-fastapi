@@ -5,9 +5,7 @@ from sqlalchemy.ext import asyncio as sa_async
 
 from app.db.base import async_session
 
-
 session_context_var: ContextVar[sa_async.AsyncSession | None] = ContextVar("_session", default=None)
-
 
 async def set_db() -> typing.AsyncIterator[None]:
     """Store db session in the context var and reset it."""

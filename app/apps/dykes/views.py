@@ -33,6 +33,8 @@ import typing
 import fastapi
 from app.apps.dykes import models, schemas
 
+from pydantic import ValidationError
+
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -62,35 +64,22 @@ async def get_dyke(dyke_id: int) -> schemas.DykeSchema:
     # Serialize the Dyke model instance into Dyke schema and return.
     return typing.cast(schemas.DykeSchema, instance)
 
-
+@router.get("/readings/", response_class=JSONResponse)
 async def list_readings(repository: ReadingRepository = Depends(get_reading_repository)):
     objects = await repository.get_all_readings()
-
     if not objects:
         raise HTTPException(status_code=404, detail="No readings found")
-    
-    # Convert ORM objects to dictionary representation
-    def convert_to_dict(obj):
-        if not obj:
-            return None
-        return {
-            "id": obj.id,
-            "crossection": obj.crossection and obj.crossection.name,
-            "location_in_topology": obj.location and obj.location.coordinates,
-            "unit": obj.unit and obj.unit.unit,
-            "value": obj.value,
-            "time": obj.time.isoformat()
-        }
-    
-    items = [convert_to_dict(obj) for obj in objects]
 
-    if not objects:
-        raise HTTPException(status_code=404, detail="No readings found")
-    
-    # Return validated readings schema
-    return schemas.Readings(items=items)
-   
-@router.post("/readings/", response_class=JSONResponse)
+    # Validate objects coming from repository
+    try:
+        readings_schema = schemas.Readings(items=objects)
+    except ValidationError as e:
+        print(e.json())  # Debug: Print validation errors
+        raise HTTPException(status_code=500, detail="Data validation error")
+
+    return readings_schema
+
+@router.post("/readings_batch/", response_class=JSONResponse)
 async def create_readings():
     ''' A prototype for this endpoint testing the main concept
     USE CASE:
@@ -124,64 +113,62 @@ async def create_readings():
     
     pass
 
-# @router.post("/readings/", response_class=JSONResponse)
-# async def create_readings(readings: List[schemas.ReadingCreate], db: AsyncSession = Depends(get_db)):
-#     '''This is the description of the concept of this endpoint
+@router.post("/readingsV1/", response_class=JSONResponse)
+async def create_readings(readings: List[schemas.Reading], db: AsyncSession = Depends(get_db)):
+    '''This is the description of the concept of this endpoint
+    '''
     
-#     '''
+    # Create a list to store the created reading instances
+    created_readings = []
     
-    
-#     # Create a list to store the created reading instances
-#     created_readings = []
-    
-#     # Iterate over each reading in the batch
-#     for reading in readings:
-#         # Check if the crossection exists
-#         crossection = await models.Crossection.get_by_id(reading.crossection_id)
-#         if not crossection:
-#             raise HTTPException(status_code=404, detail="Crossection not found")
+    # Iterate over each reading in the batch
+    for reading in readings:
+        # Check if the crossection exists
+        crossection = await models.Crossection.get_by_id(reading.crossection_id)
+        if not crossection:
+            raise HTTPException(status_code=404, detail="Crossection not found")
         
-#         # Check if the dyke exists
-#         dyke = await models.Dyke.get_by_id(reading.dyke_id)
-#         if not dyke:
-#             raise HTTPException(status_code=404, detail="Dyke not found")
+        # Check if the dyke exists
+        dyke = await models.Dyke.get_by_id(reading.dyke_id)
+        if not dyke:
+            raise HTTPException(status_code=404, detail="Dyke not found")
         
-#         # Check if the sensor exists
-#         sensor = await models.Sensor.get_by_id(reading.sensor_id)
-#         if not sensor:
-#             raise HTTPException(status_code=404, detail="Sensor not found")
+        # Check if the sensor exists
+        sensor = await models.Sensor.get_by_id(reading.sensor_id)
+        if not sensor:
+            raise HTTPException(status_code=404, detail="Sensor not found")
         
-#         # Create the reading instance
-#         reading_instance = models.Reading(
-#             crossection_id=reading.crossection_id,
-#             dyke_id=reading.dyke_id,
-#             sensor_id=reading.sensor_id,
-#             value=reading.value,
-#             time=reading.time
-#         )
+        # Create the reading instance
+        reading_instance = models.Reading(
+            crossection_id=reading.crossection_id,
+            dyke_id=reading.dyke_id,
+            sensor_id=reading.sensor_id,
+            value=reading.value,
+            time=reading.time
+        )
         
-#         # Add the reading instance to the session
-#         db.add(reading_instance)
+        # Add the reading instance to the session
+        db.add(reading_instance)
         
-#         # Append the reading instance to the created_readings list
-#         created_readings.append(reading_instance)
+        # Append the reading instance to the created_readings list
+        created_readings.append(reading_instance)
     
-#     # Commit the session to persist the created readings
-#     await db.commit()
+    # Commit the session to persist the created readings
+    await db.commit()
     
-#     # Convert the created readings to dictionary representation
-#     def convert_to_dict(reading):
-#         return {
-#             "id": reading.id,
-#             "crossection": reading.crossection and reading.crossection.name,
-#             "dyke": reading.dyke and reading.dyke.name,
-#             "sensor": reading.sensor and reading.sensor.name,
-#             "value": reading.value,
-#             "time": reading.time.isoformat()
-#         }
+    # Convert the created readings to dictionary representation
+    def convert_to_dict(reading):
+        return {
+            "id": reading.id,
+            "crossection": reading.crossection and reading.crossection.name,
+            "dyke": reading.dyke and reading.dyke.name,
+            "sensor": reading.sensor and reading.sensor.name,
+            "value": reading.value,
+            "time": reading.time.isoformat()
+        }
     
-#     # Convert the created readings to dictionary representation
-#     created_readings_dict = [convert_to_dict(reading) for reading in created_readings]
+    # Convert the created readings to dictionary representation
+    created_readings_dict = [convert_to_dict(reading) for reading in created_readings]
     
-#     # Return the created readings
-#     return schemas.Readings(items=created_readings_dict)
+    # Return the created readings
+    return schemas.Readings(items=created_readings_dict)
