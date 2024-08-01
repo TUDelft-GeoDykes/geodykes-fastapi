@@ -41,6 +41,9 @@ from sqlalchemy.orm import selectinload
 from typing import List
 from app.db.deps import get_db
 
+from app.repositories.repository_interface import ReadingRepository
+from app.dependencies import get_reading_repository
+
 router = fastapi.APIRouter()
 
 @router.get("/dykes/")
@@ -60,17 +63,9 @@ async def get_dyke(dyke_id: int) -> schemas.DykeSchema:
     return typing.cast(schemas.DykeSchema, instance)
 
 
-@router.get("/readings/", response_class=JSONResponse)
-async def list_readings(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(models.Reading)
-        .options(
-            selectinload(models.Reading.crossection),
-            selectinload(models.Reading.location),
-            selectinload(models.Reading.unit)
-        )
-    )
-    objects = result.scalars().all()
+async def list_readings(repository: ReadingRepository = Depends(get_reading_repository)):
+    objects = await repository.get_all_readings()
+
     if not objects:
         raise HTTPException(status_code=404, detail="No readings found")
     
@@ -95,3 +90,98 @@ async def list_readings(db: AsyncSession = Depends(get_db)):
     # Return validated readings schema
     return schemas.Readings(items=items)
    
+@router.post("/readings/", response_class=JSONResponse)
+async def create_readings():
+    ''' A prototype for this endpoint testing the main concept
+    USE CASE:
+    A user provides a csv file with readings, or python loaded dictionaries with readings
+    (I am assuming csv is more appropriate for this case)
+    The user also needs to provide a header to the endpoint that identifies:
+    - The metadata should have the following fields:
+    - The sensor this data is coming from
+    - The sensor should be related to an id in the database
+    - Alternatively the user can create a new sensor first.
+    - If the following fields are not provided, the endpoint should return an error.
+
+
+    USE CASE B:
+    - The user has a csv file and list where there are different sensors
+    - The name of the sensor is used to identify the sensor and perform the check
+    - How it should work: The file is uploaded, the endpoint reads the file and checks the sensor name
+       - Use yield to iterate over the file and check the sensor name
+
+
+    '''
+    # Validate the data (This is a cascade of validations)
+    # The session should be opened for a while to ask the user several questions
+    # The simplest algorithm is that the sensor must exist in order to create a reading
+    # This is a more advanced version of validation and creation of readings we don't need right away
+    # Check if sensor exists
+        # If not create a new sensor
+            # Check if crossection exists
+                # If not create a new crossection
+                    # Check if dyke exists if not create a dyke
+    
+    pass
+
+# @router.post("/readings/", response_class=JSONResponse)
+# async def create_readings(readings: List[schemas.ReadingCreate], db: AsyncSession = Depends(get_db)):
+#     '''This is the description of the concept of this endpoint
+    
+#     '''
+    
+    
+#     # Create a list to store the created reading instances
+#     created_readings = []
+    
+#     # Iterate over each reading in the batch
+#     for reading in readings:
+#         # Check if the crossection exists
+#         crossection = await models.Crossection.get_by_id(reading.crossection_id)
+#         if not crossection:
+#             raise HTTPException(status_code=404, detail="Crossection not found")
+        
+#         # Check if the dyke exists
+#         dyke = await models.Dyke.get_by_id(reading.dyke_id)
+#         if not dyke:
+#             raise HTTPException(status_code=404, detail="Dyke not found")
+        
+#         # Check if the sensor exists
+#         sensor = await models.Sensor.get_by_id(reading.sensor_id)
+#         if not sensor:
+#             raise HTTPException(status_code=404, detail="Sensor not found")
+        
+#         # Create the reading instance
+#         reading_instance = models.Reading(
+#             crossection_id=reading.crossection_id,
+#             dyke_id=reading.dyke_id,
+#             sensor_id=reading.sensor_id,
+#             value=reading.value,
+#             time=reading.time
+#         )
+        
+#         # Add the reading instance to the session
+#         db.add(reading_instance)
+        
+#         # Append the reading instance to the created_readings list
+#         created_readings.append(reading_instance)
+    
+#     # Commit the session to persist the created readings
+#     await db.commit()
+    
+#     # Convert the created readings to dictionary representation
+#     def convert_to_dict(reading):
+#         return {
+#             "id": reading.id,
+#             "crossection": reading.crossection and reading.crossection.name,
+#             "dyke": reading.dyke and reading.dyke.name,
+#             "sensor": reading.sensor and reading.sensor.name,
+#             "value": reading.value,
+#             "time": reading.time.isoformat()
+#         }
+    
+#     # Convert the created readings to dictionary representation
+#     created_readings_dict = [convert_to_dict(reading) for reading in created_readings]
+    
+#     # Return the created readings
+#     return schemas.Readings(items=created_readings_dict)
