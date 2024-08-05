@@ -1,7 +1,6 @@
 import dash
 import dash_table
 import dash_bootstrap_components as dbc
-from dash import html, dcc
 import requests
 
 # Define your FastAPI endpoint
@@ -9,7 +8,7 @@ API_BASE_URL = "http://localhost:8000/api/readings"
 
 # Fetch the data from the FastAPI endpoint
 def fetch_readings():
-    response = requests.get(API_BASE_URL)
+    response = requests.get(API_BASE_URL, timeout=10)  
     response.raise_for_status()
     return response.json()["items"]
 
@@ -30,7 +29,7 @@ app.layout = dbc.Container(
     [
         dbc.Row(
             dbc.Col(
-                html.H1("Sensor Readings Table", className="text-center"),
+                dash.html.H1("Sensor Readings Table", className="text-center"),
                 width=12,
             )
         ),
