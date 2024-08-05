@@ -150,12 +150,41 @@ async def reset_database():
         # Enable foreign key checks
         await conn.execute(sa.text("SET session_replication_role = 'origin';"))
 
+async def drop_all_tables():
+    engine = create_async_engine(DATABASE_URL, echo=True)
+
+    async with engine.begin() as conn:
+        await conn.run_sync(drop_tables_sync)
+
+    await engine.dispose()
+
+def drop_tables_sync(connection):
+    """To properly handle the inspection of tables using run_sync with
+    SQLAlchemy's AsyncConnection, you need to pass a synchronous callable 
+    that performs the inspection and table dropping. Here’s how you can adjust 
+    the drop_all_tables function:
+    """
+    # Reflect the existing database into a new metadata object
+    metadata = sa.MetaData()
+    metadata.reflect(bind=connection)
+
+    # Drop all tables
+    for table in reversed(metadata.sorted_tables):
+        connection.execute(sa.text(f"DROP TABLE IF EXISTS {table.name} CASCADE"))
+
+    # Drop all other database objects
+    connection.execute(sa.text("DROP SCHEMA public CASCADE"))
+    connection.execute(sa.text("CREATE SCHEMA public"))
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Populate development database with synthetic data.')
     parser.add_argument('--reset', action='store_true', help='Reset the database before populating')
+    parser.add_argument('--drop-all', action='store_true', help='Drop all tables before populating')
     args = parser.parse_args()
 
     if args.reset:
         asyncio.run(reset_database())
+    elif args.drop_all:
+        asyncio.run(drop_all_tables())
     else:
         asyncio.run(create_data())
