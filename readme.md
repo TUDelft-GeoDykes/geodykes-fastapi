@@ -82,7 +82,6 @@ docker-compose up -d db
 # Activate the environment using poetry
 poetry shell
 ```
-
 ## Make sure to load environment variables
 ```sh
 source .env # This will export the environment variables declared in the .env file
