@@ -30,14 +30,6 @@ Make sure you have python 3.11 or higher installed in your system. You can check
 python3 --version
 ```
 
-
-### Prepare virtual environment
-```bash
-python3 -m venv venv
-source venv/bin/activate
-poetry install
-```
-
 # [Poetry](https://python-poetry.org/docs/)
 
 Poetry is python package manager.
@@ -90,12 +82,7 @@ docker-compose up -d db
 # Activate the environment using poetry
 poetry shell
 ```
-### Run the app script to make sure 
-These are things I needed to do in MacOS. You might not to do all these steps in linux.
-```bash
-source $(poetry env info --path)/bin/activate
-python3 app/application.py # Make sure that you can run the app
-```
+
 ## Make sure to load environment variables
 ```sh
 source .env # This will export the environment variables declared in the .env file

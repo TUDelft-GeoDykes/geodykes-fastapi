@@ -313,19 +313,6 @@ typer = ">=0.12.3"
 standard = ["fastapi", "uvicorn[standard] (>=0.15.0)"]
 
 [[package]]
-name = "geodykes-model"
-version = "0.1.0"
-description = "Pydantic models to describe data types for dyke data gathering"
-optional = false
-python-versions = ">=3.6"
-files = []
-develop = true
-
-[package.source]
-type = "directory"
-url = "geodykes-pydantic-models"
-
-[[package]]
 name = "granian"
 version = "1.1.2"
 description = "A Rust HTTP server for Python applications"
@@ -1745,4 +1732,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "954ab201b25ea71d5dde48d9a78cc455e65c1ac0036f34b9f06a0d295fc3a4b2"
+content-hash = "592d12330609412586468fd2783663052e38b6a4a4e7f4aba2a54132f9aabe8c"

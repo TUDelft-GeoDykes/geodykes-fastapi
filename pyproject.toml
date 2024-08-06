@@ -17,7 +17,6 @@ sqlalchemy = "*"
 asyncpg = "*"
 greenlet = "^3.0.3"
 python-dotenv = "^1.0.1"
-geodykes_model = {path = "./geodykes-pydantic-models", develop = true}
 fastapi = "^0.111.0"
 sqlalchemy-utils = "^0.41.2"
 

@@ -1,3 +1,0 @@
-[submodule "geodykes-pydantic-models"]
-	path = geodykes-pydantic-models
-	url = git@github.com:TUDelft-GeoDykes/geodykes-pydantic-models.git
