@@ -1,4 +1,4 @@
-'''
+"""
 Repository Design Pattern: Simplifying Data Access
 Below is the step-by-step explanation of the Repository Design Pattern
 
@@ -15,12 +15,19 @@ enhancing the efficiency and flexibility of software systems.
 We use it here also for development purposes to disconnect the development of the database
 from the development of the application. This way, we can develop the application without
 having to worry about the database implementation.
-'''
+"""
+
 from abc import ABC, abstractmethod
 from typing import List
+
 from app.apps.dykes.models import Reading
+
 
 class ReadingRepository(ABC):
     @abstractmethod
     async def get_all_readings(self) -> List[Reading]:
+        pass
+
+    @abstractmethod
+    async def create_reading(self, payload) -> Reading:
         pass
