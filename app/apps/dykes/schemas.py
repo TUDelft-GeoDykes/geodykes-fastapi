@@ -45,7 +45,7 @@ class TopologySchema(BaseModel):
     coordinates: List[dict]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class LocationInTopologySchema(BaseModel):
@@ -54,7 +54,7 @@ class LocationInTopologySchema(BaseModel):
     topology: TopologySchema
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class CrossectionSchema(BaseModel):
@@ -65,7 +65,7 @@ class CrossectionSchema(BaseModel):
     dyke: DykeSchema
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UnitOfMeasureSchema(BaseModel):
@@ -74,7 +74,7 @@ class UnitOfMeasureSchema(BaseModel):
     description: Optional[str]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class SensorTypeSchema(BaseModel):
@@ -84,7 +84,7 @@ class SensorTypeSchema(BaseModel):
     multisensor: bool
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class SensorSchema(BaseModel):
@@ -95,10 +95,10 @@ class SensorSchema(BaseModel):
     is_active: bool
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Reading(BaseModel):
-    id: int
+    # id: int  # This would automatically generated
     crossection: str
     location_in_topology: List[float]
     unit: str
@@ -106,8 +106,7 @@ class Reading(BaseModel):
     time: datetime
 
     class Config:
-        orm_mode = True
-        from_attributes = True  # Enable from_orm method
+        from_attributes = True
 
 
 class Readings(Base):
