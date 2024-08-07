@@ -53,26 +53,26 @@ class DatabaseReadingRepository(ReadingRepository):
         if not obj:
             return None
         
+        # Fetch related models using the generic function
         sensor_type = await self.fetch_related_model(models.SensorType, obj.sensor.sensor_type_id)
         location = await self.fetch_related_model(models.LocationInTopology, obj.sensor.location_in_topology_id)
-
-        # Extract specific fields from the sensor object
-        sensor_details = {
-            "id": obj.sensor.id,
-            "name": obj.sensor.name,
-            "sensor_type": sensor_type.name if sensor_type else obj.sensor.sensor_type_id,
-            "is_active": obj.sensor.is_active,
-            "location": location.coordinates if location  else None,
-        } if obj.sensor else None
+        
+        # Flatten the sensor details into the reading dictionary
+        sensor_type_name = sensor_type.name if sensor_type else None
+        location_coordinates = location.coordinates if location else None
 
         return {
             "id": obj.id,
             "crossection": obj.crossection.name if obj.crossection else None,
+            "sensor_id": obj.sensor.id if obj.sensor else None,
+            "sensor_name": obj.sensor.name if obj.sensor else None,
+            "sensor_type": sensor_type_name,
+            "sensor_location": location_coordinates,
+            "sensor_is_active": obj.sensor.is_active if obj.sensor else None,
             "location_in_topology": obj.location.coordinates if obj.location else None,
             "unit": obj.unit.unit if obj.unit else None,
             "value": obj.value,
             "time": obj.time.isoformat(),
-            "sensor": sensor_details
         }
 
 
@@ -87,8 +87,8 @@ class DatabaseReadingRepository(ReadingRepository):
             )
         )
         objects = result.scalars().all()
-        items = [await self.convert_to_dict(obj) for obj in objects]
-        return items
+        readings = [await self.convert_to_dict(obj) for obj in objects]
+        return readings
     
     def sync_get_all_readings(self) -> List[models.Reading]:
         pass

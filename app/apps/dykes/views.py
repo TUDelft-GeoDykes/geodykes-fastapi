@@ -75,7 +75,7 @@ async def list_readings(
 
     # Validate objects coming from repository
     try:
-        validated_objects = schemas.Readings(items=objects)
+        validated_objects = schemas.Readings(readings=objects)
     except ValidationError as e:
         print(e.json())  # Debug: Print validation errors
         raise HTTPException(status_code=500, detail="Data validation error")

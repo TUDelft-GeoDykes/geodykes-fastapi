@@ -98,9 +98,13 @@ class SensorSchema(BaseModel):
         from_attributes = True
 
 class Reading(BaseModel):
-    id: int  # This would automatically generated
+    id: int  # Automatically generated
     crossection: str
-    sensor: SensorSchema
+    sensor_id: int
+    sensor_name: str
+    sensor_type: str
+    sensor_location: List[float]
+    sensor_is_active: bool
     location_in_topology: List[float]
     unit: str
     value: float
@@ -111,7 +115,7 @@ class Reading(BaseModel):
 
 
 class Readings(Base):
-    items: list[Reading]
+    readings: list[Reading]
 
 # For creating or updating readings
 class ReadingCreateUpdateSchema(BaseModel):
