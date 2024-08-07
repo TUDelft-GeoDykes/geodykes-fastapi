@@ -1,9 +1,14 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from typing import List
+from typing import List, Type, TypeVar, Optional, Dict
 import app.apps.dykes.models as models
 from app.repositories.repository_interface import ReadingRepository
+
+# Define a generic type variable 'T'
+# This allows us to write functions that can operate on any type of model
+T = TypeVar('T')
+
 
 class DatabaseReadingRepository(ReadingRepository):
     """
@@ -23,18 +28,53 @@ class DatabaseReadingRepository(ReadingRepository):
 
     def __init__(self, db: AsyncSession):
         self.db = db
+
+    async def fetch_related_model(self, model: Type[T], model_id: int) -> Optional[T]:
+        """
+        Fetch a related model by its ID.
+
+        Args:
+            model (Type[T]): The model class to query. This can be any SQLAlchemy model class.
+            model_id (int): The ID of the model instance to fetch.
+
+        Returns:
+            Optional[T]: The fetched model instance or None if not found.
+
+        The purpose of this function is to abstract the logic of fetching related models,
+        making the code more reusable and easier to maintain.
+        """
+        result = await self.db.execute(
+            select(model)
+            .where(model.id == model_id)
+        )
+        return result.scalar()
     
     async def convert_to_dict(self, obj):
         if not obj:
             return None
+        
+        sensor_type = await self.fetch_related_model(models.SensorType, obj.sensor.sensor_type_id)
+        location = await self.fetch_related_model(models.LocationInTopology, obj.sensor.location_in_topology_id)
+
+        # Extract specific fields from the sensor object
+        sensor_details = {
+            "id": obj.sensor.id,
+            "name": obj.sensor.name,
+            "sensor_type": sensor_type.name if sensor_type else obj.sensor.sensor_type_id,
+            "is_active": obj.sensor.is_active,
+            "location": location.coordinates if location  else None,
+        } if obj.sensor else None
+
         return {
             "id": obj.id,
             "crossection": obj.crossection.name if obj.crossection else None,
             "location_in_topology": obj.location.coordinates if obj.location else None,
             "unit": obj.unit.unit if obj.unit else None,
             "value": obj.value,
-            "time": obj.time.isoformat()
+            "time": obj.time.isoformat(),
+            "sensor": sensor_details
         }
+
 
     async def get_all_readings(self) -> List[models.Reading]:
         result = await self.db.execute(

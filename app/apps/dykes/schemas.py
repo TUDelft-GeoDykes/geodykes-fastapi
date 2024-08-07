@@ -49,9 +49,9 @@ class TopologySchema(BaseModel):
 
 
 class LocationInTopologySchema(BaseModel):
-    id: int
+    # id: int
     coordinates: List[float]
-    topology: TopologySchema
+    # topology: TopologySchema
 
     class Config:
         from_attributes = True
@@ -90,16 +90,17 @@ class SensorTypeSchema(BaseModel):
 class SensorSchema(BaseModel):
     id: int
     name: str
-    sensor_type: SensorTypeSchema
-    location: LocationInTopologySchema
+    sensor_type: str # SensorTypeSchema
+    location: List[float] #LocationInTopologySchema
     is_active: bool
 
     class Config:
         from_attributes = True
 
 class Reading(BaseModel):
-    # id: int  # This would automatically generated
+    id: int  # This would automatically generated
     crossection: str
+    sensor: SensorSchema
     location_in_topology: List[float]
     unit: str
     value: float

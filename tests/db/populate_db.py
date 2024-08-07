@@ -104,18 +104,19 @@ async def create_locations_and_sensors(session: AsyncSession, sensor_types):
 
     return locations, sensors
 
-
-async def create_readings(session: AsyncSession, crossections, locations, units, sensor_types):
+async def create_readings(session: AsyncSession, crossections, locations, units, sensor_types, sensors):
     readings = []
     start_time = datetime.now() - timedelta(days=30)
     for _ in range(300):
+        sensor = random.choice(sensors)
         readings.append(Reading(
             crossection_id=random.choice(crossections).id,
             location_in_topology_id=random.choice(locations).id,
             unit_id=random.choice(units).id,
-            sensor_type_id=random.choice(sensor_types).id,
+            sensor_type_id=sensor.sensor_type_id,
             value=random.uniform(10, 100),
-            time=start_time + timedelta(hours=random.randint(0, 720))
+            time=start_time + timedelta(hours=random.randint(0, 720)),
+            sensor=sensor
         ))
     session.add_all(readings)
     await session.commit()
@@ -129,7 +130,7 @@ async def create_data():
         units = await create_units(session)
         sensor_types = await create_sensor_types(session)
         locations, sensors = await create_locations_and_sensors(session, sensor_types)
-        readings = await create_readings(session, crossections, locations, units, sensor_types)
+        readings = await create_readings(session, crossections, locations, units, sensor_types, sensors)
 
 async def reset_database():
     engine = create_async_engine(DATABASE_URL, echo=True)
