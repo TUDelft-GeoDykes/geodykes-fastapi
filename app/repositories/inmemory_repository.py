@@ -6,5 +6,5 @@ class InMemoryReadingRepository(ReadingRepository):
     def __init__(self, data: List[Reading]):
         self.data = data
 
-    async def get_all_readings(self) -> List[Reading]:
+    async def get_readings(self) -> List[Reading]:
         return self.data

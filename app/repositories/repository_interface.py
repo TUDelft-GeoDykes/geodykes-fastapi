@@ -25,7 +25,7 @@ from app.apps.dykes.models import Reading
 
 class ReadingRepository(ABC):
     @abstractmethod
-    async def get_all_readings(self) -> List[Reading]:
+    async def get_readings(self) -> List[Reading]:
         pass
 
     @abstractmethod

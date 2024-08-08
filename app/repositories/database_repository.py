@@ -1,6 +1,7 @@
+from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, joinedload
 from typing import List, Type, TypeVar, Optional, Dict
 import app.apps.dykes.models as models
 from app.repositories.repository_interface import ReadingRepository
@@ -22,8 +23,8 @@ class DatabaseReadingRepository(ReadingRepository):
 
     Methods:
         convert_to_dict: Converts a reading object to a dictionary format.
-        get_all_readings: Retrieves all readings from the database asynchronously.
-        sync_get_all_readings: Retrieves all readings from the database synchronously.
+        get_readings: Retrieves all readings from the database asynchronously.
+        sync_get_readings: Retrieves all readings from the database synchronously.
     """
 
     def __init__(self, db: AsyncSession):
@@ -75,8 +76,46 @@ class DatabaseReadingRepository(ReadingRepository):
             "time": obj.time.isoformat(),
         }
 
+    async def get_readings(self, start_date: Optional[datetime] = None,
+                                end_date: Optional[datetime] = None,
+                                sensor_id: Optional[int] = None,
+                                sensor_name: Optional[str] = None) -> List[dict]:
+        # query = select(models.Reading).options(
+        #     selectinload(models.Reading.crossection),
+        #     selectinload(models.Reading.location),
+        #     joinedload(models.Reading.sensor).joinedload(models.Sensor.sensor_type),
+        #     selectinload(models.Reading.unit)
+        # )
+        query = select(models.Reading).options(
+            joinedload(models.Reading.crossection),
+            joinedload(models.Reading.location),
+            joinedload(models.Reading.sensor),
+            joinedload(models.Reading.unit)
+        )
 
-    async def get_all_readings(self) -> List[models.Reading]:
+        if start_date and end_date:
+            query = query.filter(models.Reading.time.between(start_date, end_date))
+        elif start_date:
+            query = query.filter(models.Reading.time >= start_date)
+        elif end_date:
+            query = query.filter(models.Reading.time <= end_date)
+        if sensor_id:
+            query = query.filter(models.Reading.sensor_id == sensor_id)
+        # elif sensor_name:
+        #     print(f"Sensor name is: {sensor_name}")
+        #     debug_query = select(models.Sensor).filter(models.Sensor.name == sensor_name)
+        #     query = query.join(models.Sensor).filter(models.Sensor.name == sensor_name)
+
+        # # Debug: Print the generated SQL query and parameters 
+        # print(f"Query is: {query}")
+
+        result = await self.db.execute(query)
+        objects = result.scalars().all()
+        readings = [await self.convert_to_dict(obj) for obj in objects]
+        return readings
+
+
+    async def old_get_readings(self) -> List[models.Reading]:
         result = await self.db.execute(
             select(models.Reading)
             .options(
@@ -90,7 +129,7 @@ class DatabaseReadingRepository(ReadingRepository):
         readings = [await self.convert_to_dict(obj) for obj in objects]
         return readings
     
-    def sync_get_all_readings(self) -> List[models.Reading]:
+    def sync_get_readings(self) -> List[models.Reading]:
         pass
 
     async def create_reading(self, payload) -> models.Reading:
