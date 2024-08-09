@@ -30,10 +30,11 @@ This layered approach ensures a clear separation of concerns where:
 """
 
 import typing
-from typing import List
+from typing import List, Optional
+from datetime import datetime
 
 import fastapi
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from sqlalchemy import select
@@ -67,9 +68,27 @@ async def get_dyke(dyke_id: int) -> schemas.DykeSchema:
 
 @router.get("/readings/", response_class=JSONResponse)
 async def list_readings(
+    start_date: Optional[datetime] = Query(None, alias="startDate"),
+    end_date: Optional[datetime] = Query(None, alias="endDate"),
+    sensor_id: Optional[int] = Query(None, alias="sensorId"),
+    sensor_name: Optional[str] = Query(None, alias="sensorName"),
     repository: ReadingRepository = Depends(get_reading_repository),
 ) -> schemas.Readings:
-    objects = await repository.get_all_readings()
+    """
+    Retrieve readings from the database asynchronously.
+    The user should be able to filter readings by start date, end date, and sensor ID.
+    These parameters are optional and should allow to flexible query different subsets of readings.
+
+    Args:
+        start_date (Optional[datetime]): The start date to filter readings by.
+        end_date (Optional[datetime]): The end date to filter readings by.
+        sensor_id (Optional[int]): The sensor ID to filter readings by.
+        sensor_name (Optional[str]): The sensor name to filter readings by.
+    """
+    objects = await repository.get_readings(start_date=start_date,
+                                            end_date=end_date, 
+                                            sensor_id=sensor_id,
+                                            sensor_name=sensor_name)
     if not objects:
         raise HTTPException(status_code=404, detail="No readings found")
 
