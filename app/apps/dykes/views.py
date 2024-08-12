@@ -70,8 +70,8 @@ async def get_dyke(dyke_id: int) -> schemas.DykeSchema:
 async def list_readings(
     start_date: Optional[datetime] = Query(None, alias="startDate"),
     end_date: Optional[datetime] = Query(None, alias="endDate"),
-    sensor_id: Optional[int] = Query(None, alias="sensorId"),
-    sensor_name: Optional[str] = Query(None, alias="sensorName"),
+    sensor_ids: Optional[List[int]] = Query(None, alias="sensorId"),
+    sensor_names: Optional[List[str]] = Query(None, alias="sensorName"),
     repository: ReadingRepository = Depends(get_reading_repository),
 ) -> schemas.Readings:
     """
@@ -87,8 +87,8 @@ async def list_readings(
     """
     objects = await repository.get_readings(start_date=start_date,
                                             end_date=end_date, 
-                                            sensor_id=sensor_id,
-                                            sensor_name=sensor_name)
+                                            sensor_ids=sensor_ids,
+                                            sensor_names=sensor_names)
     if not objects:
         raise HTTPException(status_code=404, detail="No readings found")
 

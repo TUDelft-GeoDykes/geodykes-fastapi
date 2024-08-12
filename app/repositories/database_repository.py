@@ -78,8 +78,8 @@ class DatabaseReadingRepository(ReadingRepository):
 
     async def get_readings(self, start_date: Optional[datetime] = None,
                                 end_date: Optional[datetime] = None,
-                                sensor_id: Optional[int] = None,
-                                sensor_name: Optional[str] = None) -> List[dict]:
+                                sensor_ids: Optional[List[int]] = None,
+                                sensor_names: Optional[List[str]] = None) -> List[dict]:
         query = select(models.Reading).options(
             # WHY SELECTINLOAD?
             # Queries using SQLAlchemy are constructed different depending on the load strategy used.
@@ -102,11 +102,12 @@ class DatabaseReadingRepository(ReadingRepository):
             query = query.filter(models.Reading.time >= start_date)
         elif end_date:
             query = query.filter(models.Reading.time <= end_date)
-        if sensor_id:
-            query = query.filter(models.Reading.sensor_id == sensor_id)
-        elif sensor_name:
-            sensor_name = sensor_name.strip().strip('"') # Remove any leading or trailing whitespace or quotes to avoid issues
-            query = query.join(models.Sensor).filter(models.Sensor.name == sensor_name)
+        if sensor_ids:
+            query = query.where(models.Reading.sensor_id.in_(sensor_ids))
+        elif sensor_names:
+            # Remove any leading or trailing whitespace or quotes to avoid issues with the query
+            sensor_names = [sensor_name.strip().strip('"') for sensor_name in sensor_names]
+            query = query.join(models.Sensor).where(models.Sensor.name.in_(sensor_names))
 
         result = await self.db.execute(query)
         objects = result.scalars().all()
