@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Settings(pydantic_settings.BaseSettings):
-    service_name: str = "FastAPI template"
+    service_name: str = "Geodykes Web Service"
     debug: bool = False
     log_level: LogLevels = LogLevels.info
 
