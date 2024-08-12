@@ -129,14 +129,9 @@ poetry run uvicorn app.application:application --reload
    poetry shell
    ```
 
-3. **Add necessary packages**:
+3. **Run the frontend application**:
    ```sh
-   poetry add dash_bootstrap_components pandas
-   ```
-
-4. **Run the Dash application**:
-   ```sh
-   python dash-app.py
+   poetry run python geodykes-dash/dash-app.py
    ```
 
 ### Access the Dashboard
