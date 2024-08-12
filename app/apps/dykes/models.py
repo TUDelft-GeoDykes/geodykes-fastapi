@@ -42,7 +42,6 @@ class Crossection(BaseModel):
     timeseries = relationship("Reading", back_populates="crossection")
     crossection_layers = relationship("CrossectionLayer", back_populates="crossection")
     dyke = relationship("Dyke", back_populates="crossections")
-    # topology = relationship("Topology", back_populates="crossections")
 
     def __repr__(self):
         return f"<Crossection(id={self.id}, dyke_id={self.dyke_id}, name={self.name}, description={self.description}, topology={self.topology})>"
@@ -93,14 +92,14 @@ class CrossectionLayer(BaseModel):
 
 
 class LocationInTopology(BaseModel):
-    """This model represents a location in a topology.
+    """This model represents a location in a crossection.
     It is used to store the coordinates of a location in a topology of a reading and sensor.
     """
 
     __tablename__ = "location_in_topology"
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     coordinates = sa.Column(sa.JSON, nullable=False)
-    topology_id = sa.Column(sa.Integer, sa.ForeignKey("topology.id"), nullable=False)
+    crossection_id = sa.Column(sa.Integer, sa.ForeignKey("crossection.id"), nullable=False)
 
     def __repr__(self):
         return f"<LocationInTopologys(id={self.id}, coordinates={self.coordinates})>"
@@ -119,22 +118,22 @@ class LocationInTopology(BaseModel):
 class Reading(BaseModel):
     __tablename__ = "reading"  # Database table name
     crossection_id = sa.Column(
-        sa.Integer, sa.ForeignKey("crossection.id"), nullable=False
+        sa.Integer, sa.ForeignKey("crossection.id"), nullable=False, index=True
     )  # Foreign key linking back to Crossection
     location_in_topology_id = sa.Column(
         sa.Integer, sa.ForeignKey("location_in_topology.id"), nullable=True
     )  # This is inherited from the sensor location creating the reads
     unit_id = sa.Column(
-        sa.Integer, sa.ForeignKey("unit_of_measure.id"), nullable=False
+        sa.Integer, sa.ForeignKey("unit_of_measure.id"), nullable=False, index=True
     )  # Foreign key linking to UnitOfMeasure
     sensor_type_id = sa.Column(
         sa.Integer, sa.ForeignKey("sensor_type.id"), nullable=False
     )
     sensor_id = sa.Column(
-        sa.Integer, sa.ForeignKey("sensor.id"), nullable=True
+        sa.Integer, sa.ForeignKey("sensor.id"), nullable=True, index=True
     )  # Readings association with a sensor is optional
     value = sa.Column(sa.Integer, nullable=False)  # Value of the timeseries
-    time = sa.Column(sa.DateTime, nullable=False)  # Timestamp for the reading
+    time = sa.Column(sa.DateTime, nullable=False, index=True)  # Timestamp for the reading
     crossection = relationship("Crossection", back_populates="timeseries")
     unit = relationship("UnitOfMeasure", backref="readings")
     location = relationship("LocationInTopology")
