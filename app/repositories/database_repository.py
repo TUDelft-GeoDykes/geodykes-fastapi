@@ -80,17 +80,20 @@ class DatabaseReadingRepository(ReadingRepository):
                                 end_date: Optional[datetime] = None,
                                 sensor_id: Optional[int] = None,
                                 sensor_name: Optional[str] = None) -> List[dict]:
-        # query = select(models.Reading).options(
-        #     selectinload(models.Reading.crossection),
-        #     selectinload(models.Reading.location),
-        #     joinedload(models.Reading.sensor).joinedload(models.Sensor.sensor_type),
-        #     selectinload(models.Reading.unit)
-        # )
         query = select(models.Reading).options(
-            joinedload(models.Reading.crossection),
-            joinedload(models.Reading.location),
-            joinedload(models.Reading.sensor),
-            joinedload(models.Reading.unit)
+            # WHY SELECTINLOAD?
+            # Queries using SQLAlchemy are constructed different depending on the load strategy used.
+            # For example, selectinload or joinedload.
+            # Generates multiple, smaller queries.
+            # Can be more efficient if the related objects are highly distinct or if the main table has many rows.
+            # Reduces the amount of redundant data transferred, which can be beneficial when fetching large datasets.
+
+            selectinload(models.Reading.crossection),
+            selectinload(models.Reading.location),
+            # We make this query because currently we don't have too much data in the database
+            # However in a context of larger datasets selectinload can be a better option
+            joinedload(models.Reading.sensor).joinedload(models.Sensor.sensor_type),
+            selectinload(models.Reading.unit)
         )
 
         if start_date and end_date:
@@ -101,36 +104,14 @@ class DatabaseReadingRepository(ReadingRepository):
             query = query.filter(models.Reading.time <= end_date)
         if sensor_id:
             query = query.filter(models.Reading.sensor_id == sensor_id)
-        # elif sensor_name:
-        #     print(f"Sensor name is: {sensor_name}")
-        #     debug_query = select(models.Sensor).filter(models.Sensor.name == sensor_name)
-        #     query = query.join(models.Sensor).filter(models.Sensor.name == sensor_name)
-
-        # # Debug: Print the generated SQL query and parameters 
-        # print(f"Query is: {query}")
+        elif sensor_name:
+            sensor_name = sensor_name.strip().strip('"') # Remove any leading or trailing whitespace or quotes to avoid issues
+            query = query.join(models.Sensor).filter(models.Sensor.name == sensor_name)
 
         result = await self.db.execute(query)
         objects = result.scalars().all()
         readings = [await self.convert_to_dict(obj) for obj in objects]
         return readings
-
-
-    async def old_get_readings(self) -> List[models.Reading]:
-        result = await self.db.execute(
-            select(models.Reading)
-            .options(
-                selectinload(models.Reading.crossection),
-                selectinload(models.Reading.location),
-                selectinload(models.Reading.sensor),
-                selectinload(models.Reading.unit)
-            )
-        )
-        objects = result.scalars().all()
-        readings = [await self.convert_to_dict(obj) for obj in objects]
-        return readings
-    
-    def sync_get_readings(self) -> List[models.Reading]:
-        pass
 
     async def create_reading(self, payload) -> models.Reading:
         print("Creating reading")
