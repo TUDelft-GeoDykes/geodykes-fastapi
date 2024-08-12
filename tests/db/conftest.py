@@ -121,7 +121,7 @@ def dyke(session):
 
 # A simple crossection that with no layers
 @pytest.fixture(scope="function")
-def crossection_empty(session, dyke, topology):
+def crossection_no_layers(session, dyke, topology):
     from app.apps.dykes.models import Crossection
 
     cross = Crossection(dyke_id=dyke.id, name="test crossection", 
@@ -167,10 +167,10 @@ def unit_of_measure(session):
     return retrieved
 
 @pytest.fixture(scope="function")
-def reading(session, crossection_empty, timestamp, unit_of_measure, location_in_topology):
+def reading(session, crossection_no_layers, timestamp, unit_of_measure, location_in_topology):
     from app.apps.dykes.models import Reading
     
-    read = Reading(crossection_id=crossection_empty.id,
+    read = Reading(crossection_id=crossection_no_layers.id,
                    location_in_topology_id=location_in_topology.id, unit=unit_of_measure, value=10,
                    time=timestamp)
                    
@@ -194,13 +194,15 @@ def sensor_type(session):
     return retrieved
 
 @pytest.fixture(scope="function")
-def location_in_topology(session, topology):
+def location_in_topology(session, crossection_no_layers):
     from app.apps.dykes.models import LocationInTopology
     
+    crossection = crossection_no_layers
+
     # Should only allow for two values X, Y, we use a list of two values
     # because using a dictionary makes things more complicated
     # For example this invalid coordinate would pass: {"x": 1, "y": 2, "x": 3}
-    location = LocationInTopology(topology_id=topology.id, coordinates=[1,2])
+    location = LocationInTopology(crossection_id=crossection.id, coordinates=[1,2])
     session.add(location)
     session.commit()
 

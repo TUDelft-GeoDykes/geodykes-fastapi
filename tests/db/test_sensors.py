@@ -55,16 +55,18 @@ def test_add_units_to_sensor(session, unit_of_measure):
     assert len(sensor_type_multi.units_of_measure) == 2
 
 
-def test_create_LocationInTopology(session, topology):
-    location = LocationInTopology(topology_id=topology.id, coordinates=[1,2])
+def test_create_LocationInTopology(session, crossection_no_layers):
+    crossection = crossection_no_layers
+    location = LocationInTopology(crossection_id=crossection.id, coordinates=[1,2])
     session.add(location)
     session.commit()
     assert location.id is not None
 
 
 # A sensor has to be associated with a sensor type and a location in a specific topology
-def test_create_sensor(session, sensor_type, topology):
-    location = LocationInTopology(topology_id=topology.id, coordinates=[1,2])
+def test_create_sensor(session, sensor_type, crossection_no_layers):
+    crossection = crossection_no_layers
+    location = LocationInTopology(crossection_id=crossection.id, coordinates=[1,2])
     sensor = Sensor(sensor_type=sensor_type, location=location, name="TempSensor")
     session.add(sensor)
     session.commit()

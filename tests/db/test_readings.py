@@ -9,7 +9,7 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-def test_bad_reading(crossection_empty, session):
+def test_bad_reading(crossection_no_layers, session):
     from app.apps.dykes.models import Reading
     
     # Raise pytest errors
@@ -32,28 +32,30 @@ def test_create_unit_of_measure(session):
     return retrieved
 
 # A reading will have an id and a relation to a specific crossection
-def test_create_reading(crossection_empty, session, timestamp, unit_of_measure, sensor_type, location_in_topology):
+def test_create_reading(crossection_no_layers, session, timestamp, unit_of_measure, sensor_type, location_in_topology):
     from app.apps.dykes.models import Reading
 
-    assert isinstance(crossection_empty.timeseries, list)
-    assert crossection_empty.timeseries == [] # Check if the list of timeseries is empty
+    assert isinstance(crossection_no_layers.timeseries, list)
+    assert crossection_no_layers.timeseries == [] # Check if the list of timeseries is empty
 
-    read = Reading(crossection_id=crossection_empty.id,
+    read = Reading(crossection_id=crossection_no_layers.id,
                    location_in_topology_id=location_in_topology.id, unit_id=unit_of_measure.id,
                    sensor_type_id=sensor_type.id,
                    value=10, time=timestamp)
     
     session.add(read)
     session.commit()
-    assert crossection_empty.timeseries
+    assert crossection_no_layers.timeseries
 
 # Write a test to validate this line from the LocationInTopology model
-def test_location_in_topology_coordinates(session, topology):
+def test_location_in_topology_coordinates(session, crossection_no_layers):
     from app.apps.dykes.models import LocationInTopology 
+
+    crossection = crossection_no_layers
 
     # Test case 1: Valid coordinates
     valid_coordinates = [1, 2]
-    location = LocationInTopology(topology_id=topology.id, coordinates=valid_coordinates)
+    location = LocationInTopology(crossection_id=crossection.id, coordinates=valid_coordinates)
     session.add(location)
     session.commit()
     assert location.id is not None
@@ -61,13 +63,13 @@ def test_location_in_topology_coordinates(session, topology):
     # Test case 2: Invalid coordinates (more than 2 values)
     invalid_coordinates = [1, 2, 3]
     with pytest.raises(ValueError):
-        location = LocationInTopology(topology_id=topology.id, coordinates=invalid_coordinates)
+        location = LocationInTopology(crossection_id=crossection.id, coordinates=invalid_coordinates)
         session.add(location)
         session.commit()
 
     # Test case 3: Invalid coordinates (less than 2 values)
     invalid_coordinates = [1]
     with pytest.raises(ValueError):
-        location = LocationInTopology(topology_id=topology.id, coordinates=invalid_coordinates)
+        location = LocationInTopology(crossection_id=crossection.id, coordinates=invalid_coordinates)
         session.add(location)
         session.commit()
