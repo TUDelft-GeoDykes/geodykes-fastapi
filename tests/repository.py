@@ -26,12 +26,12 @@ async def create_repository(session):
 # repo = asyncio.run(create_repository())
 
 # Function to get all readings
-async def get_all_readings():
+async def get_readings():
     async with async_session() as session:
         repo = await create_repository(session)
-        items = await repo.get_all_readings()
+        items = await repo.get_readings()
         return items
 
 # Run the function and get the result
-items = asyncio.run(get_all_readings())
+items = asyncio.run(get_readings())
 print(items)
