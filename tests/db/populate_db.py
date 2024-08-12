@@ -29,24 +29,23 @@ DATABASE_URL = settings.db_dsn  # Adjust your database URL accordingly
 engine = create_async_engine(DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
+def generate_coordinates():
+    coordinates = []
+    for _ in range(6):
+        coordinate = {"x": random.uniform(0, 10), "y": random.uniform(0, 10)}
+        coordinates.append(coordinate)
+    return coordinates
+
 async def create_dykes(session: AsyncSession):
     dykes = [Dyke(name=f"Dyke {i}", description=f"Description for Dyke {i}") for i in range(1, 5)]
     session.add_all(dykes)
     await session.commit()
     return dykes
 
-# create topologies
 async def create_topologies(session: AsyncSession):
     '''
     # Create a function to randomly generate a json list of X, Y coordinates
     '''
-    def generate_coordinates():
-        coordinates = []
-        for _ in range(6):
-            coordinate = {"x": random.uniform(0, 10), "y": random.uniform(0, 10)}
-            coordinates.append(coordinate)
-        return coordinates
-
     topologies = []
     for j in range(1, 40):
         topologies.append(Topology(coordinates=generate_coordinates()))
@@ -55,14 +54,18 @@ async def create_topologies(session: AsyncSession):
     return topologies
 
 async def create_crossections(session: AsyncSession, dykes):
-    # This will be created manually
+    # Create crossections and associate them with appropriate topologies if needed
     crossections = []
+    topologies = await session.execute(sa.select(Topology.id))
+
     for dyke in dykes:
         for j in range(1, 3):
-            crossections.append(Crossection(dyke_id=dyke.id, name=f"Crossection {dyke.id}-{j}", description=f"Description for Crossection {dyke.id}-{j}", topology=f"Topology {dyke.id}-{j}"))
+            topology_data = generate_coordinates()  # Some function to generate or retrieve topology data
+            crossections.append(Crossection(dyke_id=dyke.id, name=f"Crossection {dyke.id}-{j}", description=f"Description for Crossection {dyke.id}-{j}", topology=topology_data))
     session.add_all(crossections)
     await session.commit()
     return crossections
+
 
 
 async def create_units(session: AsyncSession):
@@ -83,22 +86,22 @@ async def create_locations_and_sensors(session: AsyncSession, sensor_types):
     locations = []
     sensors = []
 
-    # Fetch all topology IDs
-    result = await session.execute(sa.select(Topology.id))
-    topology_ids = [row[0] for row in result.fetchall()]
+    # Fetch all crossection IDs (instead of Topology IDs)
+    result = await session.execute(sa.select(Crossection.id))
+    crossection_ids = [row[0] for row in result.fetchall()]
+
+    if not crossection_ids:
+        raise ValueError("No crossections available in the database.")
 
     for i in range(1, 6):
-        if not topology_ids:
-            raise ValueError("No topologies available in the database.")
-
-        topology_id = random.choice(topology_ids)  # Ensure topology_id is valid
-        location = LocationInTopology(coordinates=[random.uniform(0, 40), random.uniform(0, 40)], topology_id=topology_id)
+        crossection_id = random.choice(crossection_ids)  # Ensure crossection_id is valid
+        location = LocationInTopology(coordinates=[random.uniform(0, 40), random.uniform(0, 40)], crossection_id=crossection_id)
         session.add(location)
         await session.flush()  # Ensure location ID is generated
         locations.append(location)  # Append to locations list
 
         sensors.append(Sensor(name=f"Sensor {i}", sensor_type_id=random.choice(sensor_types).id, location_in_topology_id=location.id, is_active=True))
-    
+
     session.add_all(sensors)  # Add all sensors
     await session.commit()  # Commit both locations and sensors
 
