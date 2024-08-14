@@ -18,7 +18,7 @@ async def test_filter_readings_by_dates(client:AsyncClient):
     http://127.0.0.1:8000/api/readings/?startDate=2024-08-01&endDate=2024-08-31&sensorId=1
 
     """
-    from dashboard.data import fetch_readings
+    from dashboard.geodykes_dash.data import fetch_readings
     end_date = "2024-08-06"
     start_date="2024-07-10"
 
