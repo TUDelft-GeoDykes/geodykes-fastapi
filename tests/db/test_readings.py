@@ -29,7 +29,7 @@ def test_create_unit_of_measure(session):
 
     retrieved = session.query(UnitOfMeasure).filter_by(id=unit.id).first()
     assert retrieved == unit
-    return retrieved
+
 
 # A reading will have an id and a relation to a specific crossection
 def test_create_reading(crossection_no_layers, session, timestamp, unit_of_measure, sensor_type, location_in_topology):
