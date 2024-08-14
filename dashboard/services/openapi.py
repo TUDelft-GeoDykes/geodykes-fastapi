@@ -10,7 +10,9 @@ load_dotenv()
 def _get_client(url="http://localhost:8000") -> DefaultApi:
     """
     Create an instance of the API client.
-    
+    Args:
+        url (str): The base URL of the API.
+
     Returns:
         DefaultApi: An instance of the API client.
     """
