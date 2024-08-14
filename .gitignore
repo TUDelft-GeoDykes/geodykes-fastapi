@@ -21,3 +21,5 @@ pytest.xml
 **-app.code**
 venv
 data
+*.xlsx
+*.csv

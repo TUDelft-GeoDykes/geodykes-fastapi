@@ -10,7 +10,7 @@ API_BASE_URL = "http://localhost:8000/api/readings"
 def fetch_readings():
     response = requests.get(API_BASE_URL, timeout=10)  
     response.raise_for_status()
-    return response.json()["items"]
+    return response.json()["readings"]
 
 # Initialize the Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -20,8 +20,10 @@ readings_data = fetch_readings()
 
 # Process readings data
 for item in readings_data:
-    item['location_x'], item['location_y'] = item['location_in_topology']
+    item['location_in_topology_x'], item['location_in_topology_y'] = item['location_in_topology']
+    item['sensor_location_x'], item['sensor_location_y'] = item['sensor_location']
     del item['location_in_topology']
+    del item['sensor_location']
     del item['id']
 
 # Layout of the Dash app
