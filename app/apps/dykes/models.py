@@ -17,7 +17,7 @@ from app.db.models import BaseModel
 class Dyke(BaseModel):
     __tablename__ = "dyke"  # Database table name
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
-    name = sa.Column(sa.String, nullable=False)  # Name of the dyke
+    name = sa.Column(sa.String, nullable=False, unique=True)  # Name of the dyke
     description = sa.Column(
         sa.String, nullable=True
     )  # Optional detailed description of the dyke
@@ -31,7 +31,7 @@ class Crossection(BaseModel):
     dyke_id = sa.Column(
         sa.Integer, sa.ForeignKey("dyke.id"), nullable=False
     )  # Foreign key linking back to Dyke
-    name = sa.Column(sa.String, nullable=False)  # Name or identifier of the crossection
+    name = sa.Column(sa.String, nullable=False, unique=True)  # Name or identifier of the crossection
     description = sa.Column(
         sa.String, nullable=True
     )  # Optional detailed description of the crossection
@@ -196,7 +196,7 @@ class Sensor(BaseModel):
 
     __tablename__ = "sensor"
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
-    name = sa.Column(sa.String, nullable=False)
+    name = sa.Column(sa.String, nullable=False, unique=True)
     sensor_type_id = sa.Column(
         sa.Integer, sa.ForeignKey("sensor_type.id"), nullable=False
     )
