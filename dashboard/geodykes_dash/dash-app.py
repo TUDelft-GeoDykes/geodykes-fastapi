@@ -3,15 +3,12 @@ from dash import dash_table, html
 import json
 import dash_bootstrap_components as dbc
 import requests
-from settings import Settings
-from services.interface import get_readings
+from services.manager import data_fetcher
 
-
-settings = Settings()
 
 # Fetch readings data
-client = settings.api_client
-fetch_readings = settings.fetch_readings
+client = data_fetcher.api_client
+fetch_readings = data_fetcher.fetch_readings
 readings_data = fetch_readings(api_client=client)
 readings_data = readings_data.readings
 readings_data = [reading.to_dict() for reading in readings_data]

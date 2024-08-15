@@ -5,7 +5,7 @@ from importlib import import_module
 # Load environment variables from a .env file
 load_dotenv()
 
-class Settings:
+class DataFetcher:
     """
     A class responsible for loading environment variables, setting up services, 
     and providing access to different application functionalities.
@@ -28,7 +28,7 @@ class Settings:
         self.load_env_variables()
 
         # Set up services dependencies
-        self.setup_services()
+        self.setup_service()
 
     def load_env_variables(self):
         """
@@ -42,7 +42,7 @@ class Settings:
         self.api_host = os.getenv('API_HOST', 'http://localhost:8000/api')
         self.api_key = os.getenv('API_KEY', None)
 
-    def setup_services(self, module_name='services.openapi'):
+    def setup_service(self, module_name='services.openapi'):
         """
         Set up the services dependencies by dynamically importing the specified module.
         The module must implement a `_get_client` function.
@@ -66,5 +66,5 @@ class Settings:
         except ImportError as e:
             raise ImportError(f"Error importing module '{module_name}': {e}")
         
-settings = Settings()
-settings.setup_services(module_name='services.openapi')
+data_fetcher = DataFetcher()
+data_fetcher.setup_service(module_name='services.openapi')

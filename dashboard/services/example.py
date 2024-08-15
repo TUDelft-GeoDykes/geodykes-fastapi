@@ -1,6 +1,6 @@
 from services.interface import get_readings
 from services.openapi import _get_readings, _get_client
-from geodykes_dash.settings import settings
+from dashboard.services.manager import settings
 
 if __name__ == "__main__":
     api_client = _get_client()
