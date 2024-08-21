@@ -175,7 +175,10 @@ async def create_data():
         await create_readings(session, crossections, locations, units, sensor_types, sensors)
 
 async def reset_database():
-    """Reset the database by truncating all tables."""
+    """Reset the database by truncating all tables.
+    The reset_database function is designed to reset the database by truncating (emptying) all the tables.
+    This means that it removes all the data from the tables but keeps the table structures (schemas) intact
+    """
     async with engine.begin() as conn:
         result = await conn.execute(sa.text("SELECT tablename FROM pg_tables WHERE schemaname = 'public';"))
         tables = result.fetchall()
@@ -185,7 +188,10 @@ async def reset_database():
         await conn.execute(sa.text("SET session_replication_role = 'origin';"))  # Re-enable foreign key checks
 
 async def drop_all_tables():
-    """Drop all tables in the database."""
+    """Drop all tables in the database.
+    The drop_all_tables function is designed to drop (delete) all tables in the database,
+    which means it removes both the data and the table structures. It also drops and recreates
+    the public schema"""
     async with engine.begin() as conn:
         await conn.run_sync(drop_tables_sync)  # Execute synchronous drop in the async context
     await engine.dispose()
