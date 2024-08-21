@@ -90,7 +90,6 @@ class Reading(BaseModel):
     sensor_id: int
     sensor_name: str
     sensor_type: str
-    sensor_location: List[float]
     sensor_is_active: bool
     location_in_topology: List[float]
     unit: str
@@ -98,6 +97,19 @@ class Reading(BaseModel):
     time: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class ReadingCreate(BaseModel):
+    crossection: str
+    sensor_id: Optional[int]
+    sensor_name: str
+    sensor_is_active: bool
+    location_in_topology: List[float]
+    unit: str
+    value: float
+    time: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 # Readings is a container model for handling collections of Reading instances.
 class Readings(Base):

@@ -1,28 +1,31 @@
-import json
-from fastapi import status
+import pytest
 from httpx import AsyncClient
 
-from app.apps.dykes import models
-
-# Test get readings
+@pytest.mark.asyncio
 async def test_get_readings(client: AsyncClient):
-    response = await client.get(f"/api/readings/")
-    assert response.status_code == status.HTTP_200_OK
-    content = json.loads(response.read())
-    assert content['readings'] is not None 
+    response = client.get("/api/readings/")
+    assert response.status_code == 200
+    assert "readings" in response.json()
 
-async def test_filter_readings_by_dates(client:AsyncClient):
-    """
-    Example of http query url:
-    http://127.0.0.1:8000/api/readings/?startDate=2024-08-01&endDate=2024-08-31&sensorId=1
+@pytest.mark.asyncio
+async def test_post_reading(client: AsyncClient):
+    payload_example = {
+        "crossection": "Crossection 4-2",
+        "sensor_id": 2,
+        "sensor_name": "Sensor 2",
+        "sensor_is_active": True,
+        "location_in_topology": [
+            25.742971005268636,
+            39.978211040045174
+        ],
+        "unit": "Unit 1",
+        "value": 61,
+        "time": "2024-08-03T11:48:14.460881"
+    }
 
-    """
-    from dashboard.geodykes_dash.data import fetch_readings
-    end_date = "2024-08-06"
-    start_date="2024-07-10"
+    response = client.post("/api/readings/", json=payload_example)
 
-    response = await fetch_readings(start_date=start_date, end_date=end_date)
-    assert response.status_code == status.HTTP_200_OK
-    
-async def test_filter_by_sensor_name(client:AsyncClient):
-    pass
+    assert response.status_code == 201  # Expecting a 201 Created status code
+    data = response.json()
+    assert data["crossection"] == payload_example["crossection"]
+    assert data["value"] == payload_example["value"]

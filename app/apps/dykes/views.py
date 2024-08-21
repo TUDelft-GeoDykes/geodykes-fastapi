@@ -34,7 +34,7 @@ from typing import List, Optional
 from datetime import datetime
 
 import fastapi
-from fastapi import Depends, HTTPException, Query
+from fastapi import Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from sqlalchemy import select
@@ -197,22 +197,22 @@ async def create_readings(
     return schemas.Readings(items=created_readings_dict)
 
 
-@router.post("/readings/", response_class=JSONResponse)
+@router.post("/readings/", response_model=schemas.Reading, status_code=status.HTTP_201_CREATED)
 async def create_reading(
-    payload: schemas.Reading,
-    repository: ReadingRepository = Depends(get_reading_repository),
-):
-    # async def create_reading(data: schemas.Reading) -> schemas.Reading:
-    """
-    payload_example =
-    { "crossection": "Crossection 2-2",
-      "location_in_topology": [
-        36.20784624264615,
-        13.973984822788621
-      ],
-      "unit": "Unit 5",
-      "value": 40,
-      "time": "2024-09-30T23:20:35.286428"
-    }
-    """
-    return await repository.create_reading(payload)
+    payload: schemas.ReadingCreate,
+    repository: ReadingRepository = Depends(get_reading_repository)
+    ):
+    # return "Valid payload submitted"
+    objects = await repository.create_reading(payload)
+
+    if not objects:
+        raise HTTPException(status_code=404)
+
+    # Validate objects coming from repository
+    try:
+        validated_objects = schemas.Reading(**objects)
+    except ValidationError as e:
+        print(e.json())  # Debug: Print validation errors
+        raise HTTPException(status_code=500, detail="Data validation error")
+
+    return validated_objects
