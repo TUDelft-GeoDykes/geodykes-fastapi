@@ -1,6 +1,11 @@
 import asyncio
 import typing
 
+from collections.abc import Generator
+
+import pytest
+from fastapi.testclient import TestClient
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,12 +15,6 @@ from app.db.base import engine
 from app.db.deps import session_context_var, set_db
 
 
-@pytest.fixture(scope="session")
-def event_loop(request: pytest.FixtureRequest) -> typing.Iterator[asyncio.AbstractEventLoop]:  # noqa: ARG001
-    """Redefined event loop fixture with bigger scope."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
 
 
 @pytest.fixture()
@@ -39,14 +38,7 @@ def _db_context(db: AsyncSession) -> typing.Iterator[None]:
     session_context_var.reset(token)
 
 
-@pytest.fixture()
-async def client() -> typing.AsyncIterator[AsyncClient]:
-    def _set_db() -> None:
-        return None
-
-    application.dependency_overrides[set_db] = _set_db
-    async with AsyncClient(
-        app=application,
-        base_url="http://test",
-    ) as client:
-        yield client
+@pytest.fixture(scope="module")
+def client() -> Generator[TestClient, None, None]:
+    with TestClient(application) as c:
+        yield c
