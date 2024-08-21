@@ -27,7 +27,7 @@ def test_create_sensor_type(session):
         session.add(duplicate_sensor_type)
         session.flush()
 
-def test_add_units_to_sensor(session, unit_of_measure):
+def test_add_units_to_sensor_type(session, unit_of_measure):
     # Test single sensor with one unit
     sensor_type_single = SensorType(name="SingleSensor", details="Single unit sensor", multisensor=False)
     sensor_type_single.units_of_measure.append(unit_of_measure)
