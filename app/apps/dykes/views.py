@@ -32,7 +32,7 @@ import typing
 from datetime import datetime
 
 import fastapi
-from fastapi import Depends, HTTPException, Query, status
+from fastapi import Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
@@ -91,26 +91,6 @@ async def list_readings(
     # Validate objects coming from repository
     try:
         validated_objects = schemas.Readings(readings=objects)
-    except ValidationError:
-        raise HTTPException(status_code=500, detail="Data validation error")
-
-    return validated_objects
-
-
-@router.post("/readings/", response_model=schemas.Reading, status_code=status.HTTP_201_CREATED)
-async def create_reading(
-    payload: schemas.ReadingCreate,
-    repository: ReadingRepository = Depends(get_reading_repository),
-    ):
-    # return "Valid payload submitted"
-    objects = await repository.create_reading(payload)
-
-    if not objects:
-        raise HTTPException(status_code=404)
-
-    # Validate objects coming from repository
-    try:
-        validated_objects = schemas.Reading(**objects)
     except ValidationError:
         raise HTTPException(status_code=500, detail="Data validation error")
 
