@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 from dotenv import load_dotenv
+
+
 load_dotenv()  # This line must come before importing any modules that use environment variables
 
 from fastapi import Depends, FastAPI

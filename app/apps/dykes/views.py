@@ -1,19 +1,18 @@
-"""
-Roles and Relationships:
-- schemas.py (This script): Defines data transfer objects (DTOs) that are used throughout the application 
-  to validate and serialize data received from or sent to clients. It ensures that data adheres to 
+"""Roles and Relationships:
+- schemas.py (This script): Defines data transfer objects (DTOs) that are used throughout the application
+  to validate and serialize data received from or sent to clients. It ensures that data adheres to
   expected formats and types, leveraging Pydantic's powerful validation capabilities.
 
-- models.py (SQLAlchemy models): Contains the SQLAlchemy ORM models that map directly to database tables. 
-  These models are responsible for database operations and reflect the application's data structure 
-  at the database level. The models defined in models.py often have a one-to-one correspondence to the 
-  schemas defined in this script, but they include additional SQLAlchemy-specific configurations and 
+- models.py (SQLAlchemy models): Contains the SQLAlchemy ORM models that map directly to database tables.
+  These models are responsible for database operations and reflect the application's data structure
+  at the database level. The models defined in models.py often have a one-to-one correspondence to the
+  schemas defined in this script, but they include additional SQLAlchemy-specific configurations and
   methods for database interactions.
 
-- controllers or views (Typically routes in FastAPI): Utilize schemas defined in this script to validate 
-  incoming data, serialize outgoing data, and handle HTTP request and response logic. Controllers fetch 
-  and manipulate data through models but communicate with clients by serializing models to schemas or 
-  deserializing request data to schemas before processing. This ensures that data is correctly typed and 
+- controllers or views (Typically routes in FastAPI): Utilize schemas defined in this script to validate
+  incoming data, serialize outgoing data, and handle HTTP request and response logic. Controllers fetch
+  and manipulate data through models but communicate with clients by serializing models to schemas or
+  deserializing request data to schemas before processing. This ensures that data is correctly typed and
   structured before any business logic is applied.
 
 For example, when a POST request is made to create a new dyke, the controller will:
@@ -25,25 +24,22 @@ For example, when a POST request is made to create a new dyke, the controller wi
 This layered approach ensures a clear separation of concerns where:
 - `schemas.py` handles data validation and serialization.
 - `models.py` manages database interactions.
-- Controllers orchestrate the flow between user inputs and backend responses, providing a clean interface 
+- Controllers orchestrate the flow between user inputs and backend responses, providing a clean interface
   for data manipulation and presentation.
 """
 
 import typing
-from typing import List, Optional
 from datetime import datetime
 
 import fastapi
 from fastapi import Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.apps.dykes import models, schemas
-from app.db.deps import get_db
 from app.dependencies import get_reading_repository
 from app.repositories.repository_interface import ReadingRepository
+
 
 router = fastapi.APIRouter()
 
@@ -68,14 +64,13 @@ async def get_dyke(dyke_id: int) -> schemas.DykeSchema:
 
 @router.get("/readings/", response_class=JSONResponse)
 async def list_readings(
-    start_date: Optional[datetime] = Query(None, alias="startDate"),
-    end_date: Optional[datetime] = Query(None, alias="endDate"),
-    sensor_ids: Optional[List[int]] = Query(None, alias="sensorId"),
-    sensor_names: Optional[List[str]] = Query(None, alias="sensorName"),
+    start_date: datetime | None = Query(None, alias="startDate"),
+    end_date: datetime | None = Query(None, alias="endDate"),
+    sensor_ids: list[int] | None = Query(None, alias="sensorId"),
+    sensor_names: list[str] | None = Query(None, alias="sensorName"),
     repository: ReadingRepository = Depends(get_reading_repository),
 ) -> schemas.Readings:
-    """
-    Retrieve readings from the database asynchronously.
+    """Retrieve readings from the database asynchronously.
     The user should be able to filter readings by start date, end date, and sensor ID.
     These parameters are optional and should allow to flexible query different subsets of readings.
 
@@ -84,9 +79,10 @@ async def list_readings(
         end_date (Optional[datetime]): The end date to filter readings by.
         sensor_id (Optional[int]): The sensor ID to filter readings by.
         sensor_name (Optional[str]): The sensor name to filter readings by.
+
     """
     objects = await repository.get_readings(start_date=start_date,
-                                            end_date=end_date, 
+                                            end_date=end_date,
                                             sensor_ids=sensor_ids,
                                             sensor_names=sensor_names)
     if not objects:
@@ -95,112 +91,16 @@ async def list_readings(
     # Validate objects coming from repository
     try:
         validated_objects = schemas.Readings(readings=objects)
-    except ValidationError as e:
-        print(e.json())  # Debug: Print validation errors
+    except ValidationError:
         raise HTTPException(status_code=500, detail="Data validation error")
 
     return validated_objects
 
 
-@router.post("/readings_batch/", response_class=JSONResponse)
-async def create_readings_in_batch():
-    """A prototype for this endpoint testing the main concept.
-    USE CASE:
-    A user provides a csv file with readings, or python loaded dictionaries with readings
-    (I am assuming csv is more appropriate for this case)
-    The user also needs to provide a header to the endpoint that identifies:
-    - The metadata should have the following fields:
-    - The sensor this data is coming from
-    - The sensor should be related to an id in the database
-    - Alternatively the user can create a new sensor first.
-    - If the following fields are not provided, the endpoint should return an error.
-
-
-    USE CASE B:
-    - The user has a csv file and list where there are different sensors
-    - The name of the sensor is used to identify the sensor and perform the check
-    - How it should work: The file is uploaded, the endpoint reads the file and checks the sensor name
-       - Use yield to iterate over the file and check the sensor name
-    """
-    # Validate the data (This is a cascade of validations)
-    # The session should be opened for a while to ask the user several questions
-    # The simplest algorithm is that the sensor must exist in order to create a reading
-    # This is a more advanced version of validation and creation of readings we don't need right away
-    # Check if sensor exists
-    # If not create a new sensor
-    # Check if crossection exists
-    # If not create a new crossection
-    # Check if dyke exists if not create a dyke
-
-    pass
-
-
-@router.post("/readings_batch2/", response_class=JSONResponse)
-async def create_readings(
-    readings: List[schemas.Reading], db: AsyncSession = Depends(get_db)
-):
-    """This is the description of the concept of this endpoint"""
-
-    # Create a list to store the created reading instances
-    created_readings = []
-
-    # Iterate over each reading in the batch
-    for reading in readings:
-        # Check if the crossection exists
-        crossection = await models.Crossection.get_by_id(reading.crossection_id)
-        if not crossection:
-            raise HTTPException(status_code=404, detail="Crossection not found")
-
-        # Check if the dyke exists
-        dyke = await models.Dyke.get_by_id(reading.dyke_id)
-        if not dyke:
-            raise HTTPException(status_code=404, detail="Dyke not found")
-
-        # Check if the sensor exists
-        sensor = await models.Sensor.get_by_id(reading.sensor_id)
-        if not sensor:
-            raise HTTPException(status_code=404, detail="Sensor not found")
-
-        # Create the reading instance
-        reading_instance = models.Reading(
-            crossection_id=reading.crossection_id,
-            dyke_id=reading.dyke_id,
-            sensor_id=reading.sensor_id,
-            value=reading.value,
-            time=reading.time,
-        )
-
-        # Add the reading instance to the session
-        db.add(reading_instance)
-
-        # Append the reading instance to the created_readings list
-        created_readings.append(reading_instance)
-
-    # Commit the session to persist the created readings
-    await db.commit()
-
-    # Convert the created readings to dictionary representation
-    def convert_to_dict(reading):
-        return {
-            "id": reading.id,
-            "crossection": reading.crossection and reading.crossection.name,
-            "dyke": reading.dyke and reading.dyke.name,
-            "sensor": reading.sensor and reading.sensor.name,
-            "value": reading.value,
-            "time": reading.time.isoformat(),
-        }
-
-    # Convert the created readings to dictionary representation
-    created_readings_dict = [convert_to_dict(reading) for reading in created_readings]
-
-    # Return the created readings
-    return schemas.Readings(items=created_readings_dict)
-
-
 @router.post("/readings/", response_model=schemas.Reading, status_code=status.HTTP_201_CREATED)
 async def create_reading(
     payload: schemas.ReadingCreate,
-    repository: ReadingRepository = Depends(get_reading_repository)
+    repository: ReadingRepository = Depends(get_reading_repository),
     ):
     # return "Valid payload submitted"
     objects = await repository.create_reading(payload)
@@ -211,8 +111,7 @@ async def create_reading(
     # Validate objects coming from repository
     try:
         validated_objects = schemas.Reading(**objects)
-    except ValidationError as e:
-        print(e.json())  # Debug: Print validation errors
+    except ValidationError:
         raise HTTPException(status_code=500, detail="Data validation error")
 
     return validated_objects
