@@ -1,16 +1,17 @@
 import dash
-import dash_table
 import dash_bootstrap_components as dbc
+import dash_table
 import requests
+
 
 # Define your FastAPI endpoint
 API_BASE_URL = "http://localhost:8000/api/readings"
 
 # Fetch the data from the FastAPI endpoint
 def fetch_readings():
-    response = requests.get(API_BASE_URL, timeout=10)  
+    response = requests.get(API_BASE_URL, timeout=10)
     response.raise_for_status()
-    return response.json()["items"]
+    return response.json()["readings"]
 
 # Initialize the Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -20,9 +21,9 @@ readings_data = fetch_readings()
 
 # Process readings data
 for item in readings_data:
-    item['location_x'], item['location_y'] = item['location_in_topology']
-    del item['location_in_topology']
-    del item['id']
+    item["location_x"], item["location_y"] = item["location_in_topology"]
+    del item["location_in_topology"]
+    del item["id"]
 
 # Layout of the Dash app
 app.layout = dbc.Container(
@@ -31,13 +32,13 @@ app.layout = dbc.Container(
             dbc.Col(
                 dash.html.H1("Sensor Readings Table", className="text-center"),
                 width=12,
-            )
+            ),
         ),
         dbc.Row(
             dbc.Col(
                 dash_table.DataTable(
                     id="readings-table",
-                    columns=[{"name": i, "id": i} for i in readings_data[0].keys()],
+                    columns=[{"name": i, "id": i} for i in readings_data[0]],
                     data=readings_data,
                     style_table={"overflowX": "auto"},
                     style_cell={
@@ -53,7 +54,7 @@ app.layout = dbc.Container(
                     },
                 ),
                 width=12,
-            )
+            ),
         ),
     ],
     fluid=True,

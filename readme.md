@@ -119,7 +119,7 @@ poetry run uvicorn app.application:application --reload
 
 3. **Run the frontend application**:
    ```sh
-   poetry run python geodykes-dash/dash-app.py
+   poetry run python dashboard/dash-app.py
    ```
 
 ### Access the Dashboard
