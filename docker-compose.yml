@@ -1,6 +1,42 @@
 version: "3.9"
 
 services:
+  # Service for Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - application
+      - dashboard
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/certificates:/etc/nginx/certificates
+    environment:
+      - NGINX_SSL=${NGINX_SSL:-false}
+    networks:
+      - geodykes-network
+
+  # Service for the dashboard (Dash app)
+  dashboard:
+    build:
+      context: .  # The root directory must include both sdk and dashboard directories
+      dockerfile: ./dashboard/Dockerfile
+    restart: always
+    ports:
+      - 8050:8050
+    environment:
+      DASH_BASE_PATH: /dashboard/
+      API_BASE_URL: http://application:8000 # Use the Docker service name for the backend
+    command: sh -c "poetry run python dash-app.py"
+    depends_on:
+      - application
+    networks:
+      - geodykes-network
+
+
   # Service for the application
   application:
     build:
@@ -9,10 +45,7 @@ services:
       args:
         - ENVIRONMENT=dev
     restart: always
-    volumes:
-      # Mount the application code into the container
-      # This allows changes in the code to be reflected in the container without needing a rebuild
-      - .:/code
+
     ports:
       # Expose port 8000 of the container to port 8000 on the host
       # This allows you to access the application at localhost:8000
@@ -23,8 +56,8 @@ services:
         condition: service_healthy
     environment:
       # Environment variables for debugging and database echo
-      - DEBUG=true
-      - DB_ECHO=true
+      - DEBUG=false
+      - DB_ECHO=false
     env_file:
       # Load environment variables from a file
       - .env-production
@@ -44,9 +77,12 @@ services:
     restart: always
     env_file:
       # Load environment variables from a file
-      - .env-production
+      - .env
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+
     ports:
-    - "5432:5432"  # Expose port 5432 on the host to port 5432 on the container
+    - 5432:5432  # Expose port 5432 on the host to port 5432 on the container
     volumes:
       # Persist database data between container restarts
       # This volume stores the database data on the host machine to ensure data is not lost when the container is restarted

@@ -2,19 +2,44 @@ import dash
 import dash_bootstrap_components as dbc
 import dash_table
 import requests
+import os
 
+# Define the base URL for the FastAPI endpoint
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")  # Default to localhost for local development
+print(f"API_BASE_URL: {API_BASE_URL}")
 
-# Define your FastAPI endpoint
-API_BASE_URL = "http://localhost:8000/api/readings"
+BASE_PATH = os.getenv("BASE_PATH", "/dashboard/")
+
+try:
+    response = requests.get(f"{API_BASE_URL}/api/readings")
+    readings_data = response.json()  # Or handle appropriately
+except requests.exceptions.RequestException as e:
+    print(f"Error fetching readings: {e}")
+    readings_data = None
 
 # Fetch the data from the FastAPI endpoint
 def fetch_readings():
-    response = requests.get(API_BASE_URL, timeout=10)
-    response.raise_for_status()
-    return response.json()["readings"]
+    try:
+        response = requests.get(f"{API_BASE_URL}/api/readings", timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        # Check if "readings" exists in the response and is not empty
+        if "readings" not in data or not data["readings"]:
+            raise ValueError("No readings available in the response.")
+
+        return data["readings"]
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching readings: {e}")
+        return None
+    except ValueError as e:
+        print(f"Error: {e}")
+        return None
 
 # Initialize the Dash app
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__, 
+                external_stylesheets=[dbc.themes.BOOTSTRAP],
+                requests_pathname_prefix=BASE_PATH)
 
 # Fetch readings data
 readings_data = fetch_readings()
@@ -62,4 +87,5 @@ app.layout = dbc.Container(
 
 # Run the Dash app
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug=True, host='0.0.0.0', port=8050)
+

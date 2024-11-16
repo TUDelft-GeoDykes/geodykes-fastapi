@@ -1,7 +1,7 @@
 ARG ENVIRONMENT="prod"
 FROM python:3.12-slim
 
-# required for psycopg2
+# Install required packages for psycopg2
 RUN apt update \
     && apt install -y --no-install-recommends \
         build-essential \
@@ -16,13 +16,25 @@ ENV POETRY_VIRTUALENVS_CREATE=false
 
 WORKDIR /code
 
+# Copy dependency files for caching
 COPY pyproject.toml .
 COPY poetry.lock .
 
-RUN [ "$ENVIRONMENT" = "prod" ] && poetry install --no-dev || poetry install
+# Install dependencies
+RUN if [ "$ENVIRONMENT" = "prod" ]; then \
+      poetry install --no-dev; \
+    else \
+      poetry install; \
+    fi
 
-COPY . .
+# Copy only the backend-related files
+COPY app /code/app
+COPY alembic.ini /code/
+COPY migrations /code/migrations
+COPY tests /code/tests
 
+# Adjust permissions
 RUN chown -R runner:root /code && chmod -R g=u /code
 
+# Switch to the runner user
 USER runner
