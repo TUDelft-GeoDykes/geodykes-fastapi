@@ -30,7 +30,7 @@ def create_sensor_type(name, details=None, multisensor=False):
 
 def create_unit_of_measure(unit, description=None):
     return mo.UnitOfMeasure(unit=unit, description=description)
-    
+
 
 def create_sensor(name, sensor_type_id, location_in_topology_id=None, is_active=True):
     return mo.Sensor(name=name, sensor_type_id=sensor_type_id, location_in_topology_id=location_in_topology_id, is_active=is_active)

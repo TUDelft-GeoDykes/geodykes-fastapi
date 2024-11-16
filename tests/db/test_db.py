@@ -1,4 +1,5 @@
 import pytest
+
 # Assume this is in models.py or a similar module
 from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.orm import declarative_base
@@ -10,12 +11,12 @@ def dummy_engine():
     NewBase = declarative_base()
 
     class Dummy(NewBase):
-        __tablename__ = 'dummy'
+        __tablename__ = "dummy"
         id = Column(Integer, primary_key=True)
         name = Column(String)
 
     # Ensure a single instance of the engine is used across all tests
-    engine = create_engine('sqlite:///:memory:', echo=True)
+    engine = create_engine("sqlite:///:memory:", echo=True)
     NewBase.metadata.create_all(engine)
     return engine
 
@@ -26,9 +27,9 @@ def inspector_dummy(dummy_engine):
     return inspect(dummy_engine)
 
 # test_database.py
-def test_dummy_table_exist(inspector_dummy):
+def test_dummy_table_exist(inspector_dummy) -> None:
     # List of expected tables
-    expected_tables = {'dummy'}
+    expected_tables = {"dummy"}
 
     # Get the set of actual tables from the database
     actual_tables = set(inspector_dummy.get_table_names())
@@ -42,9 +43,9 @@ def inspector(tables):
     return inspect(tables)
 
 # test_database.py
-def test_tables_exist(inspector):
+def test_tables_exist(inspector) -> None:
     # List of expected tables
-    expected_tables = {'dyke', 'crossection', 'topology'}
+    expected_tables = {"dyke", "crossection", "topology"}
 
     # Get the set of actual tables from the database
     actual_tables = set(inspector.get_table_names())

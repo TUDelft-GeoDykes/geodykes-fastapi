@@ -8,12 +8,11 @@ from sqlalchemy import orm
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
+from app.db.base import Base
 from app.db.deps import get_db
 from app.db.exceptions import DatabaseValidationError
 from app.db.utils import operators_map
 from app.utils.datetime import generate_utc_dt
-
-from app.db.base import Base
 
 
 if typing.TYPE_CHECKING:

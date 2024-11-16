@@ -1,29 +1,30 @@
-''' ACCEPTANCE CRITERIA FOR READINGS
+"""ACCEPTANCE CRITERIA FOR READINGS
 - A reading is timestamped and has a value
 - A reading cannot be created without a reference to a cross section
 - A reading cannot be created without a value
 - A reading cannot be created without a location
 - A reading cannot be created without a unit
-- A reading might not be created without a sensor
-'''
+- A reading might not be created without a sensor.
+"""
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-def test_bad_reading(crossection_no_layers, session):
+
+def test_bad_reading(crossection_no_layers, session) -> None:
     from app.apps.dykes.models import Reading
-    
+
     # Raise pytest errors
-    with pytest.raises (IntegrityError): 
+    with pytest.raises (IntegrityError):
         wrong_read = Reading()
         session.add(wrong_read)
         session.flush() # Force the flush to the database to raise the error
 
 # UnitsOfMeasure need to be defined before we create a reading
-def test_create_unit_of_measure(session):
+def test_create_unit_of_measure(session) -> None:
     from app.apps.dykes.models import UnitOfMeasure
 
     unit = UnitOfMeasure(unit="pressure", description="Description of this unit of measure")
-    
+
     session.add(unit)
     session.commit()
 
@@ -32,7 +33,7 @@ def test_create_unit_of_measure(session):
 
 
 # A reading will have an id and a relation to a specific crossection
-def test_create_reading(crossection_no_layers, session, timestamp, unit_of_measure, sensor_type, location_in_topology):
+def test_create_reading(crossection_no_layers, session, timestamp, unit_of_measure, sensor_type, location_in_topology) -> None:
     from app.apps.dykes.models import Reading
 
     assert isinstance(crossection_no_layers.timeseries, list)
@@ -42,14 +43,14 @@ def test_create_reading(crossection_no_layers, session, timestamp, unit_of_measu
                    location_in_topology_id=location_in_topology.id, unit_id=unit_of_measure.id,
                    sensor_type_id=sensor_type.id,
                    value=10, time=timestamp)
-    
+
     session.add(read)
     session.commit()
     assert crossection_no_layers.timeseries
 
 # Write a test to validate this line from the LocationInTopology model
-def test_location_in_topology_coordinates(session, crossection_no_layers):
-    from app.apps.dykes.models import LocationInTopology 
+def test_location_in_topology_coordinates(session, crossection_no_layers) -> None:
+    from app.apps.dykes.models import LocationInTopology
 
     crossection = crossection_no_layers
 

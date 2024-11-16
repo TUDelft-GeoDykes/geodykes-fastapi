@@ -1,13 +1,14 @@
 from app.factory.objects_factory import *
 
+
 DYKES = [
-    create_dyke(name="Dyke 1", description="description")
+    create_dyke(name="Dyke 1", description="description"),
 ]
 
 SENSORS = [
     create_sensor(name="Sensor 1", sensor_type_id=1),
     create_sensor(name="Sensor 2", sensor_type_id=1),
-    create_sensor(name="Sensor 3", sensor_type_id=1)
+    create_sensor(name="Sensor 3", sensor_type_id=1),
 ]
 
 READINGS = [
@@ -25,16 +26,16 @@ READINGS = [
 
 UNITS_OF_MEASURE = [
     create_unit_of_measure(unit="Unit 1"),
-    create_unit_of_measure(unit="Unit 2")
+    create_unit_of_measure(unit="Unit 2"),
 ]
 
 TOPOLOGIES = [
     create_topology(coordinates="Coordinates 1"),
-    create_topology(coordinates="Coordinates 2")
+    create_topology(coordinates="Coordinates 2"),
 ]
 CROSSECTIONS = [
     create_crossection(dyke_id=1, name="Crossection 1", description="description", topology=1),
-    create_crossection(dyke_id=1, name="Crossection 2", description="description", topology=2)
+    create_crossection(dyke_id=1, name="Crossection 2", description="description", topology=2),
 ]
 
 data = [DYKES, SENSORS, READINGS, UNITS_OF_MEASURE, TOPOLOGIES, CROSSECTIONS]

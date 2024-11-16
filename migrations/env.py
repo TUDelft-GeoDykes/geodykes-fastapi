@@ -6,10 +6,8 @@ from alembic import context
 from sqlalchemy import URL, create_engine
 
 from app.db.base import Base
-from app.apps.decks.models import Deck, Card
-from app.apps.dykes.models import Dyke, Crossection
-
 from app.settings import settings
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -50,15 +48,14 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode. In this scenario we need to create 
+    """Run migrations in 'online' mode. In this scenario we need to create
     an Engine and associate a connection with the context.
     """
-
     url_tokens = {
         "DB_USER": os.getenv("DB_USER", ""),
         "DB_PASS": os.getenv("DB_PASS", ""),
         "DB_HOST": os.getenv("DB_HOST", ""),
-        "DB_NAME": os.getenv("DB_NAME", "")
+        "DB_NAME": os.getenv("DB_NAME", ""),
     }
 
     url = config.get_main_option("sqlalchemy.url")

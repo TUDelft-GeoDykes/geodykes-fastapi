@@ -1,23 +1,16 @@
-import asyncio
 import typing
-
 from collections.abc import Generator
 
 import pytest
 from fastapi.testclient import TestClient
-
-import pytest
-from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application import application
 from app.db.base import engine
-from app.db.deps import session_context_var, set_db
+from app.db.deps import session_context_var
 
 
-
-
-@pytest.fixture()
+@pytest.fixture
 async def db() -> typing.AsyncIterator[AsyncSession]:
     connection = await engine.connect()
     transaction = await connection.begin()

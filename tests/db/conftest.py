@@ -1,12 +1,11 @@
-"""
-This conftest.py file is a central configuration file for pytest, containing
-fixtures that are shared across multiple test modules. Fixtures are a powerful 
-feature of pytest that allow developers to create reusable test setups, manage 
+"""This conftest.py file is a central configuration file for pytest, containing
+fixtures that are shared across multiple test modules. Fixtures are a powerful
+feature of pytest that allow developers to create reusable test setups, manage
 test data, and handle complex dependencies in a clean and modular way.
 
 ## Why Use Fixtures?
 
-Fixtures in pytest provide a way to set up a known state before tests run and 
+Fixtures in pytest provide a way to set up a known state before tests run and
 to clean up afterward. They help to:
 
 1. **Avoid Repetition:** Common setup code is written once and reused across multiple tests.
@@ -14,17 +13,17 @@ to clean up afterward. They help to:
 3. **Ensure Isolation:** Fixtures help in maintaining test isolation by providing a fresh environment for each test, ensuring that tests do not interfere with each other.
 4. **Manage Complexity:** When tests require complex setups, fixtures can simplify the process by abstracting away the setup details.
 
-In this file, we define various fixtures related to database setup, such as creating 
-SQLAlchemy sessions, setting up in-memory SQLite databases, and creating specific 
+In this file, we define various fixtures related to database setup, such as creating
+SQLAlchemy sessions, setting up in-memory SQLite databases, and creating specific
 data models like Dykes, Topologies, and Crossections.
 
-Each fixture is defined with a specific scope (`session`, `function`, etc.), indicating 
-how often the fixture setup should be executed. For example, session-scoped fixtures 
-are executed once per test session, while function-scoped fixtures are executed for 
+Each fixture is defined with a specific scope (`session`, `function`, etc.), indicating
+how often the fixture setup should be executed. For example, session-scoped fixtures
+are executed once per test session, while function-scoped fixtures are executed for
 each test function.
 
-The fixtures provided here are fundamental to the test suite, ensuring that each test 
-runs in a consistent, isolated environment, with necessary dependencies and data set up 
+The fixtures provided here are fundamental to the test suite, ensuring that each test
+runs in a consistent, isolated environment, with necessary dependencies and data set up
 in advance.
 
 ## Fixtures Defined:
@@ -50,7 +49,7 @@ import datetime
 import json
 
 import pytest
-from sqlalchemy import MetaData, create_engine
+from sqlalchemy import create_engine
 from sqlalchemy.engine import reflection
 from sqlalchemy.orm import sessionmaker
 
@@ -60,8 +59,7 @@ from app.db.base import Base
 
 @pytest.fixture(scope="session")
 def engine():
-    """
-    Pytest fixture to create a SQLAlchemy engine connected to an in-memory SQLite database.
+    """Pytest fixture to create a SQLAlchemy engine connected to an in-memory SQLite database.
 
     This fixture is executed once per test session. It sets up a connection to a
     SQLite in-memory database which is perfect for testing because it provides a
@@ -69,14 +67,14 @@ def engine():
 
     Returns:
         Engine: A SQLAlchemy engine instance connected to the in-memory database.
+
     """
     return create_engine("sqlite:///:memory:", echo=False)
 
 
 @pytest.fixture(scope="session")
 def tables(engine):
-    """
-    Pytest fixture to create all database tables.
+    """Pytest fixture to create all database tables.
 
     This fixture runs once per test session and uses the provided SQLAlchemy engine
     to create all tables defined in the `Base` metadata. This ensures that the database
@@ -87,6 +85,7 @@ def tables(engine):
 
     Returns:
         Engine: The same SQLAlchemy engine instance, now with all tables created.
+
     """
     Base.metadata.create_all(engine)  # This creates all tables in the database
     return engine
@@ -94,8 +93,7 @@ def tables(engine):
 
 @pytest.fixture(scope="session")
 def inspector(engine):
-    """
-    Pytest fixture to create a SQLAlchemy inspector for database introspection.
+    """Pytest fixture to create a SQLAlchemy inspector for database introspection.
 
     This fixture provides an inspector instance that can be used to introspect the
     database schema, such as checking for the existence of tables or columns.
@@ -105,14 +103,14 @@ def inspector(engine):
 
     Returns:
         Inspector: A SQLAlchemy Inspector instance for the provided engine.
+
     """
     return reflection.Inspector.from_engine(engine)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def session(tables):
-    """
-    Pytest fixture to manage a SQLAlchemy session for each test function.
+    """Pytest fixture to manage a SQLAlchemy session for each test function.
 
     This fixture creates a new SQLAlchemy session for every test function,
     ensuring that each test is isolated in its own transaction context.
@@ -143,6 +141,7 @@ def session(tables):
 
     Yields:
         session: A SQLAlchemy session instance for use in the test function.
+
     """
     connection = tables.connect()
     transaction = connection.begin()
@@ -169,10 +168,9 @@ TOPOLOGY_BASE_POINTS = [
     ]
 
 # One simple topology
-@pytest.fixture(scope="function")
+@pytest.fixture
 def topology(session):
-    """
-    Pytest fixture to create and commit a simple Topology object.
+    """Pytest fixture to create and commit a simple Topology object.
 
     This fixture creates a Topology object with predefined coordinates,
     adds it to the session, and commits it to the database. It then retrieves
@@ -183,6 +181,7 @@ def topology(session):
 
     Returns:
         Topology: The created and committed Topology object.
+
     """
     topo = Topology(coordinates=TOPOLOGY_BASE_POINTS)
     session.add(topo)
@@ -195,8 +194,7 @@ def topology(session):
 
 # Helper function to generate topologies
 def generate_topologies(num_topologies, y_distance) -> list:
-    """
-    Helper function to generate a list of topologies with adjusted y-coordinates.
+    """Helper function to generate a list of topologies with adjusted y-coordinates.
 
     This function generates a specified number of topologies by adjusting the
     y-values of a base set of points. Each topology's y-values are shifted by
@@ -208,6 +206,7 @@ def generate_topologies(num_topologies, y_distance) -> list:
 
     Returns:
         list: A list of topologies, where each topology is a list of coordinate dictionaries.
+
     """
     topologies = []
 
@@ -225,10 +224,9 @@ def generate_topologies(num_topologies, y_distance) -> list:
 
 
 # Fixture to instantiate Topology objects dynamically
-@pytest.fixture(scope="function")
+@pytest.fixture
 def topologies(request, session):
-    """
-    Pytest fixture to create multiple Topology objects based on test parameters.
+    """Pytest fixture to create multiple Topology objects based on test parameters.
 
     This fixture dynamically generates and creates a specified number of Topology
     objects with adjusted y-coordinates. It then commits these objects to the database
@@ -240,6 +238,7 @@ def topologies(request, session):
 
     Returns:
         list: A list of created and committed Topology objects.
+
     """
     num_topologies, y_distance = request.param
     topology_gen = generate_topologies(num_topologies, y_distance)
@@ -264,10 +263,9 @@ def topologies(request, session):
 
 
 # Create a dyke fixture
-@pytest.fixture(scope="function")
+@pytest.fixture
 def dyke(session):
-    """
-    Pytest fixture to create and commit a Dyke object.
+    """Pytest fixture to create and commit a Dyke object.
 
     This fixture creates a Dyke object with a predefined name and description,
     adds it to the session, and commits it to the database. It then retrieves
@@ -278,6 +276,7 @@ def dyke(session):
 
     Returns:
         Dyke: The created and committed Dyke object.
+
     """
     from app.apps.dykes.models import Dyke
 
@@ -293,10 +292,9 @@ def dyke(session):
 
 
 # A simple crossection that with no layers
-@pytest.fixture(scope="function")
+@pytest.fixture
 def crossection_no_layers(session, dyke, topology):
-    """
-    Pytest fixture to create and commit a simple Crossection object with no layers.
+    """Pytest fixture to create and commit a simple Crossection object with no layers.
 
     This fixture creates a Crossection object associated with a Dyke and a Topology,
     adds it to the session, and commits it to the database. It then retrieves the object
@@ -309,6 +307,7 @@ def crossection_no_layers(session, dyke, topology):
 
     Returns:
         Crossection: The created and committed Crossection object.
+
     """
     from app.apps.dykes.models import Crossection
 
@@ -327,10 +326,9 @@ def crossection_no_layers(session, dyke, topology):
     return retrieved
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def crossection(session, dyke, topologies):
-    """
-    Pytest fixture to create and commit a Crossection object with multiple layers.
+    """Pytest fixture to create and commit a Crossection object with multiple layers.
 
     This fixture creates a Crossection object associated with a Dyke and the first
     Topology in a list of Topologies, adds it to the session, and commits it to the
@@ -344,6 +342,7 @@ def crossection(session, dyke, topologies):
 
     Returns:
         Crossection: The created and committed Crossection object.
+
     """
     from app.apps.dykes.models import Crossection
 
@@ -361,22 +360,21 @@ def crossection(session, dyke, topologies):
 # READING FIXTURES
 @pytest.fixture(scope="session")
 def timestamp():
-    """
-    Pytest fixture to provide a fixed timestamp for testing.
+    """Pytest fixture to provide a fixed timestamp for testing.
 
     This fixture returns a fixed datetime object, useful for testing scenarios
     where a consistent timestamp is required.
 
     Returns:
         datetime: A fixed datetime object representing '26 Sep 2022'.
+
     """
     return datetime.datetime.strptime("26 Sep 2022", "%d %b %Y")
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def unit_of_measure(session):
-    """
-    Pytest fixture to create and commit a UnitOfMeasure object.
+    """Pytest fixture to create and commit a UnitOfMeasure object.
 
     This fixture creates a UnitOfMeasure object with predefined attributes,
     adds it to the session, and commits it to the database. It then retrieves
@@ -387,6 +385,7 @@ def unit_of_measure(session):
 
     Returns:
         UnitOfMeasure: The created and committed UnitOfMeasure object.
+
     """
     from app.apps.dykes.models import UnitOfMeasure
 
@@ -400,12 +399,11 @@ def unit_of_measure(session):
     return retrieved
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def reading(
-    session, crossection_no_layers, timestamp, unit_of_measure, location_in_topology
+    session, crossection_no_layers, timestamp, unit_of_measure, location_in_topology,
 ):
-    """
-    Pytest fixture to create and commit a Reading object.
+    """Pytest fixture to create and commit a Reading object.
 
     This fixture creates a Reading object associated with a Crossection,
     a UnitOfMeasure, and a specific location within the Topology. The Reading is
@@ -421,6 +419,7 @@ def reading(
 
     Returns:
         Reading: The created and committed Reading object.
+
     """
     from app.apps.dykes.models import Reading
 
@@ -440,10 +439,9 @@ def reading(
     return retrieved
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def sensor_type(session):
-    """
-    Pytest fixture to create and commit a SensorType object.
+    """Pytest fixture to create and commit a SensorType object.
 
     This fixture creates a SensorType object with predefined attributes,
     adds it to the session, and commits it to the database. It then retrieves
@@ -454,6 +452,7 @@ def sensor_type(session):
 
     Returns:
         SensorType: The created and committed SensorType object.
+
     """
     from app.apps.dykes.models import SensorType
 
@@ -466,10 +465,9 @@ def sensor_type(session):
     return retrieved
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def location_in_topology(session, crossection_no_layers):
-    """
-    Pytest fixture to create and commit a LocationInTopology object.
+    """Pytest fixture to create and commit a LocationInTopology object.
 
     This fixture creates a LocationInTopology object with a predefined set of coordinates,
     adds it to the session, and commits it to the database. It then retrieves the object
@@ -481,6 +479,7 @@ def location_in_topology(session, crossection_no_layers):
 
     Returns:
         LocationInTopology: The created and committed LocationInTopology object.
+
     """
     from app.apps.dykes.models import LocationInTopology
 
@@ -498,10 +497,9 @@ def location_in_topology(session, crossection_no_layers):
     return retrieved
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def sensor(session, sensor_type):
-    """
-    Pytest fixture to create and commit a Sensor object.
+    """Pytest fixture to create and commit a Sensor object.
 
     This fixture creates a Sensor object associated with a specific SensorType,
     adds it to the session, and commits it to the database. It then retrieves the object
@@ -513,6 +511,7 @@ def sensor(session, sensor_type):
 
     Returns:
         Sensor: The created and committed Sensor object.
+
     """
     from app.apps.dykes.models import Sensor
 

@@ -1,21 +1,30 @@
 #!/usr/bin/env python
-'''
-Python script to populate your development database with synthetic data.
+"""Python script to populate your development database with synthetic data.
 This script uses SQLAlchemy to interact with the database asynchronously and will create 4 different dykes, 5 different types of sensors, 5 different units, and 300 readings.
-'''
+"""
 
+import argparse
 import asyncio
-from datetime import datetime, timedelta
 import random
+from datetime import datetime, timedelta
 
 import sqlalchemy as sa
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker, selectinload
-
-from app.apps.dykes.models import Dyke, Crossection, Reading, Sensor, SensorType, UnitOfMeasure, LocationInTopology, Topology
-from app.settings import Settings
 from dotenv import load_dotenv
-import argparse
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import selectinload, sessionmaker
+
+from app.apps.dykes.models import (
+    Crossection,
+    Dyke,
+    LocationInTopology,
+    Reading,
+    Sensor,
+    SensorType,
+    Topology,
+    UnitOfMeasure,
+)
+from app.settings import Settings
+
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -58,10 +67,10 @@ async def create_crossections(session: AsyncSession, dykes):
         for j in range(1, 3):
             topology_data = generate_coordinates()  # Generate random topology data
             crossections.append(Crossection(
-                dyke_id=dyke.id, 
-                name=f"Crossection {dyke.id}-{j}", 
+                dyke_id=dyke.id,
+                name=f"Crossection {dyke.id}-{j}",
                 description=f"Description for Crossection {dyke.id}-{j}",
-                topology=topology_data
+                topology=topology_data,
             ))
     session.add_all(crossections)
     await session.commit()
@@ -81,15 +90,14 @@ async def create_sensor_types(session: AsyncSession):
     await session.commit()
     return sensor_types
 
-async def associate_sensor_types_with_units(session: AsyncSession, sensor_types, units):
-    """
-    Associate each SensorType with a set of UnitOfMeasure entries.
-    
+async def associate_sensor_types_with_units(session: AsyncSession, sensor_types, units) -> None:
+    """Associate each SensorType with a set of UnitOfMeasure entries.
+
     Eager loading of the `units_of_measure` relationship is performed using selectinload.
     This ensures that the relationship is properly loaded in the async context before we append units.
     """
     sensor_types = await session.execute(
-        sa.select(SensorType).options(selectinload(SensorType.units_of_measure))
+        sa.select(SensorType).options(selectinload(SensorType.units_of_measure)),
     )
     sensor_types = sensor_types.scalars().all()
 
@@ -105,9 +113,8 @@ async def associate_sensor_types_with_units(session: AsyncSession, sensor_types,
     await session.commit()  # Commit the transaction to save changes
 
 async def create_locations_and_sensors(session: AsyncSession, sensor_types):
-    """
-    Create LocationInTopology and Sensor entries in the database.
-    
+    """Create LocationInTopology and Sensor entries in the database.
+
     Each sensor is linked to a specific location and a sensor type.
     """
     locations = []
@@ -118,7 +125,8 @@ async def create_locations_and_sensors(session: AsyncSession, sensor_types):
     crossection_ids = [row[0] for row in result.fetchall()]
 
     if not crossection_ids:
-        raise ValueError("No crossections available in the database.")
+        msg = "No crossections available in the database."
+        raise ValueError(msg)
 
     for i in range(1, 6):
         crossection_id = random.choice(crossection_ids)  # Select a random crossection ID
@@ -134,8 +142,7 @@ async def create_locations_and_sensors(session: AsyncSession, sensor_types):
     return locations, sensors
 
 async def create_readings(session: AsyncSession, crossections, locations, units, sensor_types, sensors):
-    """
-    Create Reading entries in the database.
+    """Create Reading entries in the database.
 
     Each reading is associated with a specific crossection, location, unit, sensor type, and sensor.
     """
@@ -151,7 +158,7 @@ async def create_readings(session: AsyncSession, crossections, locations, units,
             sensor_type_id=sensor.sensor_type_id,
             value=random.uniform(10, 100),
             time=start_time + timedelta(hours=random.randint(0, 720)),
-            sensor=sensor
+            sensor=sensor,
         ))
 
     session.add_all(readings)
@@ -159,7 +166,7 @@ async def create_readings(session: AsyncSession, crossections, locations, units,
 
     return readings
 
-async def create_data():
+async def create_data() -> None:
     """Main function to create all data entries in the database."""
     async with SessionLocal() as session:  # Create a new session
         dykes = await create_dykes(session)
@@ -174,10 +181,10 @@ async def create_data():
         locations, sensors = await create_locations_and_sensors(session, sensor_types)
         await create_readings(session, crossections, locations, units, sensor_types, sensors)
 
-async def reset_database():
+async def reset_database() -> None:
     """Reset the database by truncating all tables.
     The reset_database function is designed to reset the database by truncating (emptying) all the tables.
-    This means that it removes all the data from the tables but keeps the table structures (schemas) intact
+    This means that it removes all the data from the tables but keeps the table structures (schemas) intact.
     """
     async with engine.begin() as conn:
         result = await conn.execute(sa.text("SELECT tablename FROM pg_tables WHERE schemaname = 'public';"))
@@ -187,16 +194,17 @@ async def reset_database():
             await conn.execute(sa.text(f"TRUNCATE TABLE {table[0]} CASCADE;"))
         await conn.execute(sa.text("SET session_replication_role = 'origin';"))  # Re-enable foreign key checks
 
-async def drop_all_tables():
+async def drop_all_tables() -> None:
     """Drop all tables in the database.
     The drop_all_tables function is designed to drop (delete) all tables in the database,
     which means it removes both the data and the table structures. It also drops and recreates
-    the public schema"""
+    the public schema.
+    """
     async with engine.begin() as conn:
         await conn.run_sync(drop_tables_sync)  # Execute synchronous drop in the async context
     await engine.dispose()
 
-def drop_tables_sync(connection):
+def drop_tables_sync(connection) -> None:
     """Helper function to drop all tables in a synchronous context."""
     metadata = sa.MetaData()
     metadata.reflect(bind=connection)
@@ -206,9 +214,9 @@ def drop_tables_sync(connection):
     connection.execute(sa.text("CREATE SCHEMA public"))
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Populate development database with synthetic data.')
-    parser.add_argument('--reset', action='store_true', help='Reset the database before populating')
-    parser.add_argument('--drop-all', action='store_true', help='Drop all tables before populating')
+    parser = argparse.ArgumentParser(description="Populate development database with synthetic data.")
+    parser.add_argument("--reset", action="store_true", help="Reset the database before populating")
+    parser.add_argument("--drop-all", action="store_true", help="Drop all tables before populating")
     args = parser.parse_args()
 
     if args.reset:

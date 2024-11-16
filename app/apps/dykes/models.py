@@ -1,5 +1,4 @@
-"""
-This script defines the ORM models for the 'Dyke' and 'Crossection' entities using SQLAlchemy.
+"""This script defines the ORM models for the 'Dyke' and 'Crossection' entities using SQLAlchemy.
 These models are central to the application's data layer, allowing for database interactions that support the creation, retrieval, update, and deletion of 'Dyke' and 'Crossection' records.
 The models are used throughout the application, particularly in the controllers/views,
 here they interact with the business logic to handle web requests and in the schemas for
@@ -19,7 +18,7 @@ class Dyke(BaseModel):
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     name = sa.Column(sa.String, nullable=False, unique=True)  # Name of the dyke
     description = sa.Column(
-        sa.String, nullable=True
+        sa.String, nullable=True,
     )  # Optional detailed description of the dyke
     # Relationship to Crossection, indicating one dyke can have multiple crossections.
     crossections = relationship("Crossection", back_populates="dyke")
@@ -29,14 +28,14 @@ class Crossection(BaseModel):
     __tablename__ = "crossection"  # Database table name
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     dyke_id = sa.Column(
-        sa.Integer, sa.ForeignKey("dyke.id"), nullable=False
+        sa.Integer, sa.ForeignKey("dyke.id"), nullable=False,
     )  # Foreign key linking back to Dyke
     name = sa.Column(sa.String, nullable=False, unique=True)  # Name or identifier of the crossection
     description = sa.Column(
-        sa.String, nullable=True
+        sa.String, nullable=True,
     )  # Optional detailed description of the crossection
     topology = sa.Column(
-        sa.JSON, nullable=False
+        sa.JSON, nullable=False,
     )  # Descriptive attribute for the shape or structure
     # Relationship to Timeseries, indicating one crossection can have multiple timeseries.
     timeseries = relationship("Reading", back_populates="crossection")
@@ -47,8 +46,7 @@ class Crossection(BaseModel):
         return f"<Crossection(id={self.id}, dyke_id={self.dyke_id}, name={self.name}, description={self.description}, topology={self.topology})>"
 
 class Topology(BaseModel):
-    """
-    Column to store coordinates in JSON format. This approach is chosen for several reasons:
+    """Column to store coordinates in JSON format. This approach is chosen for several reasons:
     1. Data Integrity: Storing coordinates as a JSON array of objects (e.g., [{"x": 1, "y": 2}, {"x": 3, "y": 4}])
         ensures that each X and Y value is inherently paired, maintaining the structural integrity of coordinate data.
         data between a SQL database and a pandas DataFrame. This is particularly beneficial for data science and analytics
@@ -61,7 +59,7 @@ class Topology(BaseModel):
 
     __tablename__ = "topology"
     coordinates = sa.Column(
-        sa.JSON
+        sa.JSON,
     )  # Example format: [{"x": 1, "y": 2}, {"x": 3, "y": 4}]
 
     # topology = relationship("Crossection", back_populates="topology")
@@ -70,20 +68,18 @@ class Topology(BaseModel):
 
 
 class CrossectionLayer(BaseModel):
-    """
-    A layer is a 2D geometry composed of a top topology and a bottom topology. This model represents the layers of a crossection.
-    """
+    """A layer is a 2D geometry composed of a top topology and a bottom topology. This model represents the layers of a crossection."""
 
     __tablename__ = "crossection_layer"
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     crossection_id = sa.Column(
-        sa.Integer, sa.ForeignKey("crossection.id"), nullable=False
+        sa.Integer, sa.ForeignKey("crossection.id"), nullable=False,
     )
     top_topology_id = sa.Column(
-        sa.Integer, sa.ForeignKey("topology.id"), nullable=False
+        sa.Integer, sa.ForeignKey("topology.id"), nullable=False,
     )
     bottom_topology_id = sa.Column(
-        sa.Integer, sa.ForeignKey("topology.id"), nullable=False
+        sa.Integer, sa.ForeignKey("topology.id"), nullable=False,
     )
     soil_type = sa.Column(sa.String, nullable=False)
     crossection = relationship("Crossection", back_populates="crossection_layers")
@@ -110,7 +106,8 @@ class LocationInTopology(BaseModel):
     @validates("coordinates")
     def validate_coordinates(self, key, value):
         if not isinstance(value, list) or len(value) != 2:
-            raise ValueError("Coordinates must be a list of two values")
+            msg = "Coordinates must be a list of two values"
+            raise ValueError(msg)
         return value
 
 
@@ -118,19 +115,19 @@ class LocationInTopology(BaseModel):
 class Reading(BaseModel):
     __tablename__ = "reading"  # Database table name
     crossection_id = sa.Column(
-        sa.Integer, sa.ForeignKey("crossection.id"), nullable=False, index=True
+        sa.Integer, sa.ForeignKey("crossection.id"), nullable=False, index=True,
     )  # Foreign key linking back to Crossection
     location_in_topology_id = sa.Column(
-        sa.Integer, sa.ForeignKey("location_in_topology.id"), nullable=True
+        sa.Integer, sa.ForeignKey("location_in_topology.id"), nullable=True,
     )  # This is inherited from the sensor location creating the reads
     unit_id = sa.Column(
-        sa.Integer, sa.ForeignKey("unit_of_measure.id"), nullable=False, index=True
+        sa.Integer, sa.ForeignKey("unit_of_measure.id"), nullable=False, index=True,
     )  # Foreign key linking to UnitOfMeasure
     sensor_type_id = sa.Column(
-        sa.Integer, sa.ForeignKey("sensor_type.id"), nullable=False
+        sa.Integer, sa.ForeignKey("sensor_type.id"), nullable=False,
     )
     sensor_id = sa.Column(
-        sa.Integer, sa.ForeignKey("sensor.id"), nullable=True, index=True
+        sa.Integer, sa.ForeignKey("sensor.id"), nullable=True, index=True,
     )  # Readings association with a sensor is optional
     value = sa.Column(sa.Integer, nullable=False)  # Value of the timeseries
     time = sa.Column(sa.DateTime, nullable=False, index=True)  # Timestamp for the reading
@@ -151,17 +148,19 @@ class SensorType(BaseModel):
     multisensor = Column(Boolean, default=False)
 
     units_of_measure = relationship(
-        "UnitOfMeasure", secondary="sensor_unit_association", cascade="all, delete"
+        "UnitOfMeasure", secondary="sensor_unit_association", cascade="all, delete",
     )
     sensors = relationship("Sensor", back_populates="sensor_type")
 
     @validates("units_of_measure")
     def validate_units(self, key, unit):
         """Validate the number of units for a multisensor type
-        A single sensor type cannot have more than one unit of measure."""
+        A single sensor type cannot have more than one unit of measure.
+        """
         if not self.multisensor and len(self.units_of_measure) >= 1:
+            msg = "Single sensor type cannot have more than one unit of measure."
             raise ValueError(
-                "Single sensor type cannot have more than one unit of measure."
+                msg,
             )
         return unit
 
@@ -198,10 +197,10 @@ class Sensor(BaseModel):
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     name = sa.Column(sa.String, nullable=False, unique=True)
     sensor_type_id = sa.Column(
-        sa.Integer, sa.ForeignKey("sensor_type.id"), nullable=False
+        sa.Integer, sa.ForeignKey("sensor_type.id"), nullable=False,
     )
     location_in_topology_id = sa.Column(
-        sa.Integer, sa.ForeignKey("location_in_topology.id"), nullable=True
+        sa.Integer, sa.ForeignKey("location_in_topology.id"), nullable=True,
     )
     is_active = sa.Column(sa.Boolean, default=True)
 
